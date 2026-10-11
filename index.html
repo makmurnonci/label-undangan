@@ -146,7 +146,7 @@ $("#font").innerHTML=FONTS.map(f=>`<option style="font-family:'${f}'">${f}</opti
 $$("[data-k]").forEach(el=>{const k=el.dataset.k;
  if(el.type==="checkbox")el.checked=!!S[k];else el.value=S[k];
  el.addEventListener("input",()=>{S[k]=el.type==="checkbox"?el.checked:el.type==="number"?(parseFloat(el.value)||0):el.value;
-  if(["lw","lh"].includes(k)){S.preset="Kustom";$("#preset").value="Kustom"}
+  if(["lw","lh"].includes(k)){S.preset="Kustom";$("#preset").value="Kustom";if(S.auto){S.lw=parseFloat($("[data-k=lw]").value)||S.lw;S.lh=parseFloat($("[data-k=lh]").value)||S.lh;S.auto=false;$("[data-k=auto]").checked=false}}
   if(["pw","ph"].includes(k)){S.paper="c";$("#paper").value="c";S.land=S.pw>S.ph;$("#orient").value=S.land?"l":"p"}
   render()})});
 $("#preset").value=S.preset;$("#paper").value=S.paper;
@@ -186,7 +186,7 @@ function render(){save();
  const roll=S.mode==="roll",{pad}=S;let {lw,lh}=S;const rot=Number(S.rot),ox=+S.offx||0,oy=+S.offy||0;
  const nc=Math.max(1,+(S.land?S.ncl:S.nc)||1),nr=Math.max(1,+(S.land?S.nrl:S.nr)||1),au=!!S.auto&&!roll;
  if(au){lw=Math.floor(Math.max(5,(S.pw-2*S.ml-(nc-1)*S.gx)/nc)*100)/100;lh=Math.floor(Math.max(5,(S.ph-2*S.mt-(nr-1)*S.gy)/nr)*100)/100}
- $$("[data-k=lw],[data-k=lh]").forEach(el=>{el.disabled=au;if(au)el.value=+(el.dataset.k==="lw"?lw:lh).toFixed(1)});
+ $$("[data-k=lw],[data-k=lh]").forEach(el=>{el.disabled=false;if(au)el.value=+(el.dataset.k==="lw"?lw:lh).toFixed(1)});
  const pw=roll?lw:S.pw,ph=roll?lh:S.ph,mt=roll?oy:S.mt+oy,ml=roll?ox:S.ml+ox,gx=roll?0:S.gx,gy=roll?0:S.gy;
  const jc=S.valign==="space-evenly"?"space-evenly":"flex-start",vc=S.valign==="center"?" va-c":S.valign==="flex-end"?" va-e":"";
  const cols=au?nc:Math.max(1,Math.floor((pw-ml+gx)/(lw+gx))),rws=au?nr:Math.max(1,Math.floor((ph-mt+gy)/(lh+gy))),per=cols*rws;
