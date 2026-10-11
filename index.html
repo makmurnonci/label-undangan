@@ -66,6 +66,8 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
   <div style="grid-column:1/-1"><label>Mode cetak</label><select data-k="mode"><option value="sheet">Lembar stiker (banyak label per kertas)</option><option value="roll">Langsung per label (printer label / roll, 1 label = 1 halaman)</option></select></div>
   <div><label>Geser horizontal (mm)</label><input type="number" data-k="offx" step="0.5"></div><div><label>Geser vertikal (mm)</label><input type="number" data-k="offy" step="0.5"></div>
   <div><label>Orientasi kertas</label><select id="orient"><option value="p">Potret</option><option value="l">Lanskap (melintang)</option></select></div><div></div>
+  <label style="grid-column:1/-1"><input type="checkbox" data-k="auto"> Hitung ukuran label otomatis dari jumlah kolom × baris</label>
+  <div><label>Jumlah kolom</label><input type="number" data-k="nc" min="1" max="10"></div><div><label>Jumlah baris</label><input type="number" data-k="nr" min="1" max="30"></div>
   <div><label>Lebar label (mm)</label><input type="number" data-k="lw" min="10" step="0.5"></div>
   <div><label>Tinggi label (mm)</label><input type="number" data-k="lh" min="8" step="0.5"></div>
   <div><label>Lebar kertas (mm)</label><input type="number" data-k="pw" min="50"></div>
@@ -120,9 +122,11 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const FONTS=["Figtree","Playfair Display","Lora","Cormorant Garamond","Montserrat","Great Vibes","Georgia","Times New Roman","Arial","Verdana","Courier New"];
-const PRESETS={ "50×30 mm":[50,30],"64×32 mm":[64,32],"70×35 mm":[70,35],"75×38 mm":[75,38],"90×50 mm":[90,50],"100×50 mm":[100,50],"100×70 mm":[100,70],"105×74 mm (A7)":[105,74],"Kustom":null };
+const PRESETS={ "Lembar 2 kolom × 5 baris (contoh 1)":{auto:true,nc:2,nr:5,mt:8,ml:6,gx:3,gy:3,align:"center",valign:"center",f:{nama:{s:15},jab:{s:11},alamat:{s:11},post:{s:11}}},
+"Lembar 3 kolom × 4 baris (contoh 2)":{auto:true,nc:3,nr:4,mt:8,ml:6,gx:3,gy:3,align:"center",valign:"center",f:{nama:{s:13},jab:{s:10},alamat:{s:10},post:{s:10}}},
+"50×30 mm":[50,30],"64×32 mm":[64,32],"70×35 mm":[70,35],"75×38 mm":[75,38],"90×50 mm":[90,50],"100×50 mm":[100,50],"100×70 mm":[100,70],"105×74 mm (A7)":[105,74],"Kustom":null };
 const FN=[["nama","Nama"],["jab","Jabatan"],["alamat","Alamat"],["lain","Lainnya"],["post","Penutup"]];
-const DEF={lw:75,lh:38,pw:210,ph:297,mt:10,ml:10,gx:3,gy:0,pad:3,start:1,copies:1,only:"",mode:"sheet",offx:0,offy:0,fgap:0.5,preSide:true,sgap:2,rot:"0",land:false,logo:"",logoPos:"top",logoH:10,numfmt:"No. {n}",font:"Figtree",align:"left",valign:"center",pre:"Yth.",post:"di Tempat",fit:true,guides:true,preset:"75×38 mm",paper:"210,297",
+const DEF={lw:75,lh:38,pw:210,ph:297,mt:10,ml:10,gx:3,gy:0,pad:3,start:1,copies:1,auto:false,nc:2,nr:5,only:"",mode:"sheet",offx:0,offy:0,fgap:0.5,preSide:true,sgap:2,rot:"0",land:false,logo:"",logoPos:"top",logoH:10,numfmt:"No. {n}",font:"Figtree",align:"left",valign:"center",pre:"Yth.",post:"di Tempat",fit:true,guides:true,preset:"75×38 mm",paper:"210,297",
  f:{no:{on:false,s:8,b:0,i:0,u:0},pre:{on:true,s:10,b:0,i:0,u:0},nama:{on:true,s:13,b:1,i:0,u:0},jab:{on:true,s:10,b:0,i:1,u:0},alamat:{on:true,s:10,b:0,i:0,u:0},lain:{on:false,s:9,b:0,i:0,u:0},post:{on:true,s:10,b:0,i:0,u:0}},
  rows:[{nama:"Bapak H. Andi Pratama, S.E.",jab:"Kepala Dinas Pendidikan",alamat:"Jl. Jenderal Sudirman No. 12\nParepare, Sulawesi Selatan",lain:""},{nama:"Ibu Dr. Siti Nurhaliza",jab:"Direktur Utama PT Maju Jaya",alamat:"Jl. Bau Massepe No. 45\nParepare",lain:""}]};
 let S;
@@ -143,7 +147,7 @@ $$("[data-k]").forEach(el=>{const k=el.dataset.k;
   if(["pw","ph"].includes(k)){S.paper="c";$("#paper").value="c";S.land=S.pw>S.ph;$("#orient").value=S.land?"l":"p"}
   render()})});
 $("#preset").value=S.preset;$("#paper").value=S.paper;
-$("#preset").onchange=e=>{S.preset=e.target.value;const p=PRESETS[S.preset];if(p){S.lw=p[0];S.lh=p[1];sync()}render()};
+$("#preset").onchange=e=>{S.preset=e.target.value;const p=PRESETS[S.preset];if(Array.isArray(p)){S.lw=p[0];S.lh=p[1];S.auto=false}else if(p){const{f,...o}=p;Object.assign(S,o);if(f)for(const k in f)S.f[k]=Object.assign({},S.f[k],f[k]);S.mode="sheet";drawFields()}sync();render()};
 $("#paper").onchange=e=>{S.paper=e.target.value;if(S.paper!=="c"){[S.pw,S.ph]=S.paper.split(",").map(Number);if(S.land)[S.pw,S.ph]=[S.ph,S.pw];sync()}render()};
 $("#orient").value=S.land?"l":"p";
 $("#orient").onchange=e=>{S.land=e.target.value==="l";if((S.pw>S.ph)!==S.land)[S.pw,S.ph]=[S.ph,S.pw];sync();autoZoom();render()};
@@ -176,10 +180,13 @@ $("#imp").onclick=()=>{const t=$("#paste").value.trim();if(!t)return;
 // render
 const logoTag=()=>`<img src="${S.logo}" alt="" style="height:${S.logoH}mm;max-width:100%;object-fit:contain;flex:none;align-self:${S.align==="left"?"flex-start":S.align==="right"?"flex-end":"center"};padding:.6mm 0">`;
 function render(){save();
- const roll=S.mode==="roll",{lw,lh,pad}=S,rot=Number(S.rot),ox=+S.offx||0,oy=+S.offy||0;
+ const roll=S.mode==="roll",{pad}=S;let {lw,lh}=S;const rot=Number(S.rot),ox=+S.offx||0,oy=+S.offy||0;
+ const nc=Math.max(1,+S.nc||1),nr=Math.max(1,+S.nr||1),au=!!S.auto&&!roll;
+ if(au){lw=Math.floor(Math.max(5,(S.pw-2*S.ml-(nc-1)*S.gx)/nc)*100)/100;lh=Math.floor(Math.max(5,(S.ph-2*S.mt-(nr-1)*S.gy)/nr)*100)/100}
+ $$("[data-k=lw],[data-k=lh]").forEach(el=>{el.disabled=au;if(au)el.value=+(el.dataset.k==="lw"?lw:lh).toFixed(1)});
  const pw=roll?lw:S.pw,ph=roll?lh:S.ph,mt=roll?oy:S.mt+oy,ml=roll?ox:S.ml+ox,gx=roll?0:S.gx,gy=roll?0:S.gy;
  const jc=S.valign==="space-evenly"?"space-evenly":"flex-start",vc=S.valign==="center"?" va-c":S.valign==="flex-end"?" va-e":"";
- const cols=Math.max(1,Math.floor((pw-ml+gx)/(lw+gx))),rws=Math.max(1,Math.floor((ph-mt+gy)/(lh+gy))),per=cols*rws;
+ const cols=au?nc:Math.max(1,Math.floor((pw-ml+gx)/(lw+gx))),rws=au?nr:Math.max(1,Math.floor((ph-mt+gy)/(lh+gy))),per=cols*rws;
  $("#calc").textContent=roll?`Mode langsung: tiap label = 1 halaman seukuran ${lw}×${lh} mm. Pilih kertas dengan ukuran yang sama di dialog cetak.`:`Muat ${cols} kolom × ${rws} baris = ${per} label per halaman.`;
  window.EW=pw;$("#pg").textContent=`@page{size:${pw}mm ${ph}mm;margin:0}`;
  const items=[];for(let i=1;i<(roll?1:S.start);i++)items.push(null);
