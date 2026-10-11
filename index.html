@@ -123,7 +123,9 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const FONTS=["Figtree","Playfair Display","Lora","Cormorant Garamond","Montserrat","Great Vibes","Georgia","Times New Roman","Arial","Verdana","Courier New"];
-const PRESETS={ "Lembar label (potret 2×5 · lanskap 3×4)":{auto:true,nc:2,nr:5,ncl:3,nrl:4,mt:8,ml:6,gx:3,gy:3,align:"center",valign:"center",f:{nama:{s:14},jab:{s:10},alamat:{s:10},post:{s:10}}},
+const PRESETS={ "Tom & Jerry 121 — 38×76 mm (10/lembar)":{auto:false,lw:76,lh:38,pw:170,ph:210,paper:"c",land:false,mt:4,ml:7,gx:4,gy:3,pad:3,align:"center",valign:"center",f:{nama:{s:12},jab:{s:9},alamat:{s:9},post:{s:10,b:1}}},
+"Tom & Jerry 103 — 32×64 mm (12/lembar)":{auto:false,lw:64,lh:32,pw:210,ph:165,paper:"c",land:true,mt:8.75,ml:4,gx:5,gy:6.5,pad:2,align:"center",valign:"center",f:{nama:{s:10},jab:{s:8},alamat:{s:8},post:{s:8,b:1}}},
+"Lembar label (potret 2×5 · lanskap 3×4)":{auto:true,nc:2,nr:5,ncl:3,nrl:4,mt:8,ml:6,gx:3,gy:3,align:"center",valign:"center",f:{nama:{s:14},jab:{s:10},alamat:{s:10},post:{s:10}}},
 "50×30 mm":[50,30],"64×32 mm":[64,32],"70×35 mm":[70,35],"75×38 mm":[75,38],"90×50 mm":[90,50],"100×50 mm":[100,50],"100×70 mm":[100,70],"105×74 mm (A7)":[105,74],"Kustom":null };
 const FN=[["nama","Nama"],["jab","Jabatan"],["alamat","Alamat"],["lain","Lainnya"],["post","Penutup"]];
 const DEF={lw:75,lh:38,pw:210,ph:297,mt:8,ml:6,gx:3,gy:3,pad:3,start:1,copies:1,auto:true,nc:2,nr:5,ncl:3,nrl:4,only:"",mode:"sheet",offx:0,offy:0,fgap:0.5,preSide:true,sgap:2,rot:"0",land:false,logo:"",logoPos:"top",logoH:10,numfmt:"No. {n}",font:"Figtree",align:"left",valign:"center",pre:"Yth.",post:"di Tempat",fit:true,guides:true,preset:"Lembar label (potret 2×5 · lanskap 3×4)",paper:"210,297",
@@ -148,7 +150,7 @@ $$("[data-k]").forEach(el=>{const k=el.dataset.k;
   if(["pw","ph"].includes(k)){S.paper="c";$("#paper").value="c";S.land=S.pw>S.ph;$("#orient").value=S.land?"l":"p"}
   render()})});
 $("#preset").value=S.preset;$("#paper").value=S.paper;
-$("#preset").onchange=e=>{S.preset=e.target.value;const p=PRESETS[S.preset];if(Array.isArray(p)){S.lw=p[0];S.lh=p[1];S.auto=false}else if(p){const{f,...o}=p;Object.assign(S,o);if(f)for(const k in f)S.f[k]=Object.assign({},S.f[k],f[k]);S.mode="sheet";drawFields()}sync();render()};
+$("#preset").onchange=e=>{S.preset=e.target.value;const p=PRESETS[S.preset];if(Array.isArray(p)){S.lw=p[0];S.lh=p[1];S.auto=false}else if(p){const{f,...o}=p;Object.assign(S,o);if(f)for(const k in f)S.f[k]=Object.assign({},S.f[k],f[k]);S.mode="sheet";drawFields();autoZoom()}sync();$("#paper").value=S.paper;$("#orient").value=S.land?"l":"p";render()};
 $("#paper").onchange=e=>{S.paper=e.target.value;if(S.paper!=="c"){[S.pw,S.ph]=S.paper.split(",").map(Number);if(S.land)[S.pw,S.ph]=[S.ph,S.pw];sync()}render()};
 $("#orient").value=S.land?"l":"p";
 $("#orient").onchange=e=>{S.land=e.target.value==="l";if((S.pw>S.ph)!==S.land)[S.pw,S.ph]=[S.ph,S.pw];sync();autoZoom();render()};
@@ -244,7 +246,7 @@ async function saveFile(name,data){try{const d=window.claude&&await claude.use("
  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data]));a.download=name;a.click()}
 // template
 const A4={pw:210,ph:297,paper:"210,297",land:false,mode:"sheet",rot:"0",pad:3,fgap:0.5};
-const BUILT=Object.assign({"Kertas label A4 — potret 2×5 / lanskap 3×4":{...A4,...PRESETS["Lembar label (potret 2×5 · lanskap 3×4)"],preset:"Lembar label (potret 2×5 · lanskap 3×4)"}},{"Klasik — serif, rata tengah":{font:"Playfair Display",align:"center",valign:"center",fgap:0.8,f:{nama:{s:14,b:1},jab:{s:10,i:1},alamat:{s:10,i:0},post:{s:10,i:1}}},
+const BUILT=Object.assign({"Tom & Jerry 121 — 38×76 mm (10/lembar)":{...A4,...PRESETS["Tom & Jerry 121 — 38×76 mm (10/lembar)"],preset:"Tom & Jerry 121 — 38×76 mm (10/lembar)"},"Tom & Jerry 103 — 32×64 mm (12/lembar)":{...A4,...PRESETS["Tom & Jerry 103 — 32×64 mm (12/lembar)"],preset:"Tom & Jerry 103 — 32×64 mm (12/lembar)"},"Kertas label A4 — potret 2×5 / lanskap 3×4":{...A4,...PRESETS["Lembar label (potret 2×5 · lanskap 3×4)"],preset:"Lembar label (potret 2×5 · lanskap 3×4)"}},{"Klasik — serif, rata tengah":{font:"Playfair Display",align:"center",valign:"center",fgap:0.8,f:{nama:{s:14,b:1},jab:{s:10,i:1},alamat:{s:10,i:0},post:{s:10,i:1}}},
 "Resmi — rata kiri":{font:"Figtree",align:"left",valign:"flex-start",f:{nama:{s:12,b:1},jab:{s:10,i:0},alamat:{s:10},post:{s:10}}},
 "Elegan — tulisan tangan":{font:"Great Vibes",align:"center",valign:"center",f:{nama:{s:20,b:0},jab:{s:14,i:0},alamat:{s:13},post:{s:13}}},
 "Ringkas — label kecil 50×30":{lw:50,lh:30,preset:"50×30 mm",font:"Montserrat",align:"left",valign:"center",pad:2,fgap:0.3,f:{nama:{s:10,b:1},jab:{s:8},alamat:{s:8},post:{s:8}}},
