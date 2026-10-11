@@ -67,7 +67,8 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
   <div><label>Geser horizontal (mm)</label><input type="number" data-k="offx" step="0.5"></div><div><label>Geser vertikal (mm)</label><input type="number" data-k="offy" step="0.5"></div>
   <div><label>Orientasi kertas</label><select id="orient"><option value="p">Potret</option><option value="l">Lanskap (melintang)</option></select></div><div></div>
   <label style="grid-column:1/-1"><input type="checkbox" data-k="auto"> Hitung ukuran label otomatis dari jumlah kolom × baris</label>
-  <div><label>Jumlah kolom</label><input type="number" data-k="nc" min="1" max="10"></div><div><label>Jumlah baris</label><input type="number" data-k="nr" min="1" max="30"></div>
+  <div><label>Kolom (kertas potret)</label><input type="number" data-k="nc" min="1" max="10"></div><div><label>Baris (kertas potret)</label><input type="number" data-k="nr" min="1" max="30"></div>
+  <div><label>Kolom (kertas lanskap)</label><input type="number" data-k="ncl" min="1" max="10"></div><div><label>Baris (kertas lanskap)</label><input type="number" data-k="nrl" min="1" max="30"></div>
   <div><label>Lebar label (mm)</label><input type="number" data-k="lw" min="10" step="0.5"></div>
   <div><label>Tinggi label (mm)</label><input type="number" data-k="lh" min="8" step="0.5"></div>
   <div><label>Lebar kertas (mm)</label><input type="number" data-k="pw" min="50"></div>
@@ -122,16 +123,16 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const FONTS=["Figtree","Playfair Display","Lora","Cormorant Garamond","Montserrat","Great Vibes","Georgia","Times New Roman","Arial","Verdana","Courier New"];
-const PRESETS={ "Lembar 2 kolom × 5 baris (contoh 1)":{auto:true,nc:2,nr:5,mt:8,ml:6,gx:3,gy:3,align:"center",valign:"center",f:{nama:{s:15},jab:{s:11},alamat:{s:11},post:{s:11}}},
-"Lembar 3 kolom × 4 baris (contoh 2)":{auto:true,nc:3,nr:4,mt:8,ml:6,gx:3,gy:3,align:"center",valign:"center",f:{nama:{s:13},jab:{s:10},alamat:{s:10},post:{s:10}}},
+const PRESETS={ "Lembar label (potret 2×5 · lanskap 3×4)":{auto:true,nc:2,nr:5,ncl:3,nrl:4,mt:8,ml:6,gx:3,gy:3,align:"center",valign:"center",f:{nama:{s:14},jab:{s:10},alamat:{s:10},post:{s:10}}},
 "50×30 mm":[50,30],"64×32 mm":[64,32],"70×35 mm":[70,35],"75×38 mm":[75,38],"90×50 mm":[90,50],"100×50 mm":[100,50],"100×70 mm":[100,70],"105×74 mm (A7)":[105,74],"Kustom":null };
 const FN=[["nama","Nama"],["jab","Jabatan"],["alamat","Alamat"],["lain","Lainnya"],["post","Penutup"]];
-const DEF={lw:75,lh:38,pw:210,ph:297,mt:10,ml:10,gx:3,gy:0,pad:3,start:1,copies:1,auto:false,nc:2,nr:5,only:"",mode:"sheet",offx:0,offy:0,fgap:0.5,preSide:true,sgap:2,rot:"0",land:false,logo:"",logoPos:"top",logoH:10,numfmt:"No. {n}",font:"Figtree",align:"left",valign:"center",pre:"Yth.",post:"di Tempat",fit:true,guides:true,preset:"75×38 mm",paper:"210,297",
+const DEF={lw:75,lh:38,pw:210,ph:297,mt:8,ml:6,gx:3,gy:3,pad:3,start:1,copies:1,auto:true,nc:2,nr:5,ncl:3,nrl:4,only:"",mode:"sheet",offx:0,offy:0,fgap:0.5,preSide:true,sgap:2,rot:"0",land:false,logo:"",logoPos:"top",logoH:10,numfmt:"No. {n}",font:"Figtree",align:"left",valign:"center",pre:"Yth.",post:"di Tempat",fit:true,guides:true,preset:"Lembar label (potret 2×5 · lanskap 3×4)",paper:"210,297",
  f:{no:{on:false,s:8,b:0,i:0,u:0},pre:{on:true,s:10,b:0,i:0,u:0},nama:{on:true,s:13,b:1,i:0,u:0},jab:{on:true,s:10,b:0,i:1,u:0},alamat:{on:true,s:10,b:0,i:0,u:0},lain:{on:false,s:9,b:0,i:0,u:0},post:{on:true,s:10,b:0,i:0,u:0}},
  rows:[{nama:"Bapak H. Andi Pratama, S.E.",jab:"Kepala Dinas Pendidikan",alamat:"Jl. Jenderal Sudirman No. 12\nParepare, Sulawesi Selatan",lain:""},{nama:"Ibu Dr. Siti Nurhaliza",jab:"Direktur Utama PT Maju Jaya",alamat:"Jl. Bau Massepe No. 45\nParepare",lain:""}]};
 let S;
 try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem("lbl-v1")||"{}"))}catch(e){S=structuredClone(DEF)}
 S.f=Object.assign(structuredClone(DEF.f),S.f);if(!Array.isArray(S.rows))S.rows=[];
+if(S.v!==2)Object.assign(S,{v:2,auto:true,nc:2,nr:5,ncl:3,nrl:4,mt:8,ml:6,gx:3,gy:3,mode:"sheet",preset:"Lembar label (potret 2×5 · lanskap 3×4)"});
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function save(){try{localStorage.setItem("lbl-v1",JSON.stringify(S))}catch(e){}}
@@ -181,7 +182,7 @@ $("#imp").onclick=()=>{const t=$("#paste").value.trim();if(!t)return;
 const logoTag=()=>`<img src="${S.logo}" alt="" style="height:${S.logoH}mm;max-width:100%;object-fit:contain;flex:none;align-self:${S.align==="left"?"flex-start":S.align==="right"?"flex-end":"center"};padding:.6mm 0">`;
 function render(){save();
  const roll=S.mode==="roll",{pad}=S;let {lw,lh}=S;const rot=Number(S.rot),ox=+S.offx||0,oy=+S.offy||0;
- const nc=Math.max(1,+S.nc||1),nr=Math.max(1,+S.nr||1),au=!!S.auto&&!roll;
+ const nc=Math.max(1,+(S.land?S.ncl:S.nc)||1),nr=Math.max(1,+(S.land?S.nrl:S.nr)||1),au=!!S.auto&&!roll;
  if(au){lw=Math.floor(Math.max(5,(S.pw-2*S.ml-(nc-1)*S.gx)/nc)*100)/100;lh=Math.floor(Math.max(5,(S.ph-2*S.mt-(nr-1)*S.gy)/nr)*100)/100}
  $$("[data-k=lw],[data-k=lh]").forEach(el=>{el.disabled=au;if(au)el.value=+(el.dataset.k==="lw"?lw:lh).toFixed(1)});
  const pw=roll?lw:S.pw,ph=roll?lh:S.ph,mt=roll?oy:S.mt+oy,ml=roll?ox:S.ml+ox,gx=roll?0:S.gx,gy=roll?0:S.gy;
@@ -242,12 +243,13 @@ $("[data-k=mode]").addEventListener("change",()=>{autoZoom();zoom()});
 async function saveFile(name,data){try{const d=window.claude&&await claude.use("downloads");if(d){await d.save({filename:name,data});return}}catch(e){if(e&&e.code==="declined")return}
  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data]));a.download=name;a.click()}
 // template
-const BUILT={"Klasik — serif, rata tengah":{font:"Playfair Display",align:"center",valign:"center",fgap:0.8,f:{nama:{s:14,b:1},jab:{s:10,i:1},alamat:{s:10,i:0},post:{s:10,i:1}}},
+const A4={pw:210,ph:297,paper:"210,297",land:false,mode:"sheet",rot:"0",pad:3,fgap:0.5};
+const BUILT=Object.assign({"Kertas label A4 — potret 2×5 / lanskap 3×4":{...A4,...PRESETS["Lembar label (potret 2×5 · lanskap 3×4)"],preset:"Lembar label (potret 2×5 · lanskap 3×4)"}},{"Klasik — serif, rata tengah":{font:"Playfair Display",align:"center",valign:"center",fgap:0.8,f:{nama:{s:14,b:1},jab:{s:10,i:1},alamat:{s:10,i:0},post:{s:10,i:1}}},
 "Resmi — rata kiri":{font:"Figtree",align:"left",valign:"flex-start",f:{nama:{s:12,b:1},jab:{s:10,i:0},alamat:{s:10},post:{s:10}}},
 "Elegan — tulisan tangan":{font:"Great Vibes",align:"center",valign:"center",f:{nama:{s:20,b:0},jab:{s:14,i:0},alamat:{s:13},post:{s:13}}},
 "Ringkas — label kecil 50×30":{lw:50,lh:30,preset:"50×30 mm",font:"Montserrat",align:"left",valign:"center",pad:2,fgap:0.3,f:{nama:{s:10,b:1},jab:{s:8},alamat:{s:8},post:{s:8}}},
-"Langsung — printer label 100×50":{mode:"roll",lw:100,lh:50,preset:"100×50 mm",font:"Figtree",align:"center",valign:"center",f:{nama:{s:16,b:1},jab:{s:11,i:0},alamat:{s:11},post:{s:11}}}};
-const BASE={mode:"sheet",rot:"0",pad:3,fgap:0.5,lw:75,lh:38,preset:"75×38 mm",offx:0,offy:0,valign:"center",align:"left"};
+"Langsung — printer label 100×50":{mode:"roll",lw:100,lh:50,preset:"100×50 mm",font:"Figtree",align:"center",valign:"center",f:{nama:{s:16,b:1},jab:{s:11,i:0},alamat:{s:11},post:{s:11}}}});
+const BASE={auto:false,mode:"sheet",rot:"0",pad:3,fgap:0.5,lw:75,lh:38,preset:"75×38 mm",offx:0,offy:0,valign:"center",align:"left"};
 let TPL={};try{TPL=JSON.parse(localStorage.getItem("lbl-tpl-v1")||"{}")}catch(e){}
 const saveT=()=>{try{localStorage.setItem("lbl-tpl-v1",JSON.stringify(TPL))}catch(e){msg("Template tidak bisa disimpan di browser ini. Gunakan Ekspor.")}};
 const msg=t=>$("#tmsg").textContent=t;
