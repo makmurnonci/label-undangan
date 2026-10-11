@@ -69,6 +69,7 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
   <label style="grid-column:1/-1"><input type="checkbox" data-k="auto"> Hitung ukuran label otomatis dari jumlah kolom × baris</label>
   <div><label>Kolom (kertas potret)</label><input type="number" data-k="nc" min="1" max="10"></div><div><label>Baris (kertas potret)</label><input type="number" data-k="nr" min="1" max="30"></div>
   <div><label>Kolom (kertas lanskap)</label><input type="number" data-k="ncl" min="1" max="10"></div><div><label>Baris (kertas lanskap)</label><input type="number" data-k="nrl" min="1" max="30"></div>
+  <button id="recalc" type="button" style="grid-column:1/-1">Hitung ulang ukuran label otomatis</button>
   <div><label>Lebar label (mm)</label><input type="number" data-k="lw" min="10" step="0.5"></div>
   <div><label>Tinggi label (mm)</label><input type="number" data-k="lh" min="8" step="0.5"></div>
   <div><label>Lebar kertas (mm)</label><input type="number" data-k="pw" min="50"></div>
@@ -146,14 +147,21 @@ $("#font").innerHTML=FONTS.map(f=>`<option style="font-family:'${f}'">${f}</opti
 $$("[data-k]").forEach(el=>{const k=el.dataset.k;
  if(el.type==="checkbox")el.checked=!!S[k];else el.value=S[k];
  el.addEventListener("input",()=>{S[k]=el.type==="checkbox"?el.checked:el.type==="number"?(parseFloat(el.value)||0):el.value;
-  if(["lw","lh"].includes(k)){S.preset="Kustom";$("#preset").value="Kustom";if(S.auto){S.lw=parseFloat($("[data-k=lw]").value)||S.lw;S.lh=parseFloat($("[data-k=lh]").value)||S.lh;S.auto=false;$("[data-k=auto]").checked=false}}
+  if(["lw","lh"].includes(k)){S.preset="Kustom";$("#preset").value="Kustom";if(S.auto){S.lw=parseFloat($("[data-k=lw]").value)||S.lw;S.lh=parseFloat($("[data-k=lh]").value)||S.lh;S.sizeManual=true}}
   if(["pw","ph"].includes(k)){S.paper="c";$("#paper").value="c";S.land=S.pw>S.ph;$("#orient").value=S.land?"l":"p"}
   render()})});
+$("[data-k=auto]").addEventListener("input",()=>{if(S.auto){S.sizeManual=false;render()}});
 $("#preset").value=S.preset;$("#paper").value=S.paper;
-$("#preset").onchange=e=>{S.preset=e.target.value;const p=PRESETS[S.preset];if(Array.isArray(p)){S.lw=p[0];S.lh=p[1];S.auto=false}else if(p){const{f,...o}=p;Object.assign(S,o);if(f)for(const k in f)S.f[k]=Object.assign({},S.f[k],f[k]);S.mode="sheet";drawFields();autoZoom()}sync();$("#paper").value=S.paper;$("#orient").value=S.land?"l":"p";render()};
+$("#preset").onchange=e=>{S.os=null;S.sizeManual=false;S.preset=e.target.value;const p=PRESETS[S.preset];if(Array.isArray(p)){S.lw=p[0];S.lh=p[1];S.auto=false}else if(p){const{f,...o}=p;Object.assign(S,o);if(f)for(const k in f)S.f[k]=Object.assign({},S.f[k],f[k]);S.mode="sheet";drawFields();autoZoom()}sync();$("#paper").value=S.paper;$("#orient").value=S.land?"l":"p";render()};
 $("#paper").onchange=e=>{S.paper=e.target.value;if(S.paper!=="c"){[S.pw,S.ph]=S.paper.split(",").map(Number);if(S.land)[S.pw,S.ph]=[S.ph,S.pw];sync()}render()};
 $("#orient").value=S.land?"l":"p";
-$("#orient").onchange=e=>{S.land=e.target.value==="l";if((S.pw>S.ph)!==S.land)[S.pw,S.ph]=[S.ph,S.pw];sync();autoZoom();render()};
+const LK=["lw","lh","pw","ph","mt","ml","gx","gy","pad","auto","nc","nr","ncl","nrl","paper","preset","f","sizeManual"];
+$("#recalc").onclick=()=>{S.sizeManual=false;S.auto=true;sync();render()};
+$("#orient").onchange=e=>{const to=e.target.value==="l",from=S.land;
+ if(S.os&&from!==to){S.os[from?"l":"p"]=Object.fromEntries(LK.map(k=>[k,structuredClone(S[k])]));const t=S.os[to?"l":"p"];if(t)Object.assign(S,structuredClone(t));else if((S.pw>S.ph)!==to)[S.pw,S.ph]=[S.ph,S.pw]}
+ else if((S.pw>S.ph)!==to)[S.pw,S.ph]=[S.ph,S.pw];
+ if(!S.os)S.sizeManual=false;
+ S.land=to;sync();$("#preset").value=S.preset;$("#paper").value=S.paper;drawFields();autoZoom();render()};
 function sync(){$$("[data-k]").forEach(el=>{const k=el.dataset.k;if(el.type==="checkbox")el.checked=!!S[k];else el.value=S[k]})}
 
 // field format rows
@@ -185,8 +193,8 @@ const logoTag=()=>`<img src="${S.logo}" alt="" style="height:${S.logoH}mm;max-wi
 function render(){save();
  const roll=S.mode==="roll",{pad}=S;let {lw,lh}=S;const rot=Number(S.rot),ox=+S.offx||0,oy=+S.offy||0;
  const nc=Math.max(1,+(S.land?S.ncl:S.nc)||1),nr=Math.max(1,+(S.land?S.nrl:S.nr)||1),au=!!S.auto&&!roll;
- if(au){lw=Math.floor(Math.max(5,(S.pw-2*S.ml-(nc-1)*S.gx)/nc)*100)/100;lh=Math.floor(Math.max(5,(S.ph-2*S.mt-(nr-1)*S.gy)/nr)*100)/100}
- $$("[data-k=lw],[data-k=lh]").forEach(el=>{el.disabled=false;if(au)el.value=+(el.dataset.k==="lw"?lw:lh).toFixed(1)});
+ if(au&&!S.sizeManual){lw=Math.floor(Math.max(5,(S.pw-2*S.ml-(nc-1)*S.gx)/nc)*100)/100;lh=Math.floor(Math.max(5,(S.ph-2*S.mt-(nr-1)*S.gy)/nr)*100)/100}
+ $$("[data-k=lw],[data-k=lh]").forEach(el=>{el.disabled=false;if(au&&!S.sizeManual)el.value=+(el.dataset.k==="lw"?lw:lh).toFixed(1)});
  const pw=roll?lw:S.pw,ph=roll?lh:S.ph,mt=roll?oy:S.mt+oy,ml=roll?ox:S.ml+ox,gx=roll?0:S.gx,gy=roll?0:S.gy;
  const jc=S.valign==="space-evenly"?"space-evenly":"flex-start",vc=S.valign==="center"?" va-c":S.valign==="flex-end"?" va-e":"";
  const cols=au?nc:Math.max(1,Math.floor((pw-ml+gx)/(lw+gx))),rws=au?nr:Math.max(1,Math.floor((ph-mt+gy)/(lh+gy))),per=cols*rws;
@@ -245,8 +253,11 @@ $("[data-k=mode]").addEventListener("change",()=>{autoZoom();zoom()});
 async function saveFile(name,data){try{const d=window.claude&&await claude.use("downloads");if(d){await d.save({filename:name,data});return}}catch(e){if(e&&e.code==="declined")return}
  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data]));a.download=name;a.click()}
 // template
+const fullF=pf=>{const f=structuredClone(DEF.f);for(const k in pf)Object.assign(f[k],pf[k]);return f};
+const mkL=n=>{const P=PRESETS[n];return {lw:P.lw,lh:P.lh,pw:P.pw,ph:P.ph,mt:P.mt,ml:P.ml,gx:P.gx,gy:P.gy,pad:P.pad,auto:false,sizeManual:false,nc:2,nr:5,ncl:3,nrl:4,paper:"c",preset:n,f:fullF(P.f)}};
+const K1="Tom & Jerry 121 — 38×76 mm (10/lembar)",K2="Tom & Jerry 103 — 32×64 mm (12/lembar)";
 const A4={pw:210,ph:297,paper:"210,297",land:false,mode:"sheet",rot:"0",pad:3,fgap:0.5};
-const BUILT=Object.assign({"Tom & Jerry 121 — 38×76 mm (10/lembar)":{...A4,...PRESETS["Tom & Jerry 121 — 38×76 mm (10/lembar)"],preset:"Tom & Jerry 121 — 38×76 mm (10/lembar)"},"Tom & Jerry 103 — 32×64 mm (12/lembar)":{...A4,...PRESETS["Tom & Jerry 103 — 32×64 mm (12/lembar)"],preset:"Tom & Jerry 103 — 32×64 mm (12/lembar)"},"Kertas label A4 — potret 2×5 / lanskap 3×4":{...A4,...PRESETS["Lembar label (potret 2×5 · lanskap 3×4)"],preset:"Lembar label (potret 2×5 · lanskap 3×4)"}},{"Klasik — serif, rata tengah":{font:"Playfair Display",align:"center",valign:"center",fgap:0.8,f:{nama:{s:14,b:1},jab:{s:10,i:1},alamat:{s:10,i:0},post:{s:10,i:1}}},
+const BUILT=Object.assign({"Tom & Jerry — potret 121 (10 label) / lanskap 103 (12 label)":{...A4,...mkL(K1),land:false,align:"center",valign:"center",os:{p:mkL(K1),l:mkL(K2)}},"Tom & Jerry 121 — 38×76 mm (10/lembar)":{...A4,...PRESETS["Tom & Jerry 121 — 38×76 mm (10/lembar)"],preset:"Tom & Jerry 121 — 38×76 mm (10/lembar)"},"Tom & Jerry 103 — 32×64 mm (12/lembar)":{...A4,...PRESETS["Tom & Jerry 103 — 32×64 mm (12/lembar)"],preset:"Tom & Jerry 103 — 32×64 mm (12/lembar)"},"Kertas label A4 — potret 2×5 / lanskap 3×4":{...A4,...PRESETS["Lembar label (potret 2×5 · lanskap 3×4)"],preset:"Lembar label (potret 2×5 · lanskap 3×4)"}},{"Klasik — serif, rata tengah":{font:"Playfair Display",align:"center",valign:"center",fgap:0.8,f:{nama:{s:14,b:1},jab:{s:10,i:1},alamat:{s:10,i:0},post:{s:10,i:1}}},
 "Resmi — rata kiri":{font:"Figtree",align:"left",valign:"flex-start",f:{nama:{s:12,b:1},jab:{s:10,i:0},alamat:{s:10},post:{s:10}}},
 "Elegan — tulisan tangan":{font:"Great Vibes",align:"center",valign:"center",f:{nama:{s:20,b:0},jab:{s:14,i:0},alamat:{s:13},post:{s:13}}},
 "Ringkas — label kecil 50×30":{lw:50,lh:30,preset:"50×30 mm",font:"Montserrat",align:"left",valign:"center",pad:2,fgap:0.3,f:{nama:{s:10,b:1},jab:{s:8},alamat:{s:8},post:{s:8}}},
@@ -257,7 +268,7 @@ const saveT=()=>{try{localStorage.setItem("lbl-tpl-v1",JSON.stringify(TPL))}catc
 const msg=t=>$("#tmsg").textContent=t;
 function drawT(sel){const u=Object.keys(TPL);$("#tpl").innerHTML='<optgroup label="Bawaan">'+Object.keys(BUILT).map(k=>`<option value="b:${esc(k)}">${esc(k)}</option>`).join("")+'</optgroup>'+(u.length?'<optgroup label="Tersimpan">'+u.map(k=>`<option value="u:${esc(k)}">${esc(k)}</option>`).join("")+'</optgroup>':"");if(sel)$("#tpl").value=sel}
 const snap=w=>{const o=structuredClone(S);delete o.rows;if(w)o.rows=structuredClone(S.rows);return o};
-function applyT(t){const o={...t};delete o.rows;Object.assign(S,o);
+function applyT(t){const o={...t};delete o.rows;S.os=null;S.sizeManual=false;Object.assign(S,o);
  if(o.f){const f={};FN.forEach(([k])=>f[k]=Object.assign({},DEF.f[k],o.f[k]));S.f=f}
  if(Array.isArray(t.rows))S.rows=t.rows;
  sync();$("#preset").value=S.preset;$("#paper").value=S.paper;$("#orient").value=S.land?"l":"p";drawFields();drawRows();autoZoom();render()}
