@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cetak Label Undangan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;700&family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+:root{--bg:#eceef1;--pn:#fff;--tx:#1b2430;--mu:#5e6b7a;--ln:#d5dae1;--ac:#0b6b5d;--ac2:#e6f3f0;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181d;--pn:#1d232b;--tx:#e8ecf1;--mu:#98a4b3;--ln:#303944;--ac:#3cc4ae;--ac2:#16312d}}
+:root[data-theme="dark"]{--bg:#14181d;--pn:#1d232b;--tx:#e8ecf1;--mu:#98a4b3;--ln:#303944;--ac:#3cc4ae;--ac2:#16312d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 Figtree,system-ui,sans-serif}
+.app{display:grid;grid-template-columns:400px 1fr;min-height:100vh}
+aside{background:var(--pn);border-right:1px solid var(--ln);padding:16px;overflow:auto;max-height:100vh;position:sticky;top:0}
+main{padding:16px;overflow:auto}
+h1{font-size:18px;margin:0 0 2px}h2{font-size:13px;margin:18px 0 8px;padding-top:12px;border-top:1px solid var(--ln)}
+.sub{color:var(--mu);margin:0 0 8px;font-size:12px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.g3{grid-template-columns:1fr 1fr 1fr}
+label{display:block;font-size:12px;color:var(--mu)}
+input,select,textarea,button{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--ln);border-radius:6px;padding:6px 8px;width:100%}
+input[type=checkbox]{width:auto}
+button{cursor:pointer;width:auto;background:var(--pn)}button:hover{border-color:var(--ac)}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;padding:9px 16px}
+:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.fr{display:grid;grid-template-columns:22px 1fr 56px repeat(4,30px);gap:4px;align-items:center;margin-bottom:6px}
+.fr .t{font-size:13px}.fr button{padding:4px 0;width:30px;text-align:center}
+.fr button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px;border:1px solid var(--ln);border-radius:8px;margin-bottom:6px;position:relative}
+.row .x{position:absolute;right:4px;top:4px;padding:0 6px;border:none;background:none;color:var(--mu)}
+.row input,.row textarea{padding:4px 6px}.row .w{grid-column:1/-1}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar .info{color:var(--mu);font-size:12px;margin-left:auto}
+#pages{transform-origin:top left}
+.page{background:#fff;color:#000;margin:0 0 16px;display:grid;align-content:start;justify-content:start;box-shadow:0 1px 8px rgba(0,0,0,.18);overflow:hidden;page-break-after:always}
+.lab{display:flex;flex-direction:column;overflow:hidden;word-break:break-word;line-height:1.25}
+.lab.gd{outline:1px dashed #9aa;outline-offset:-1px}.lab.skip{outline:1px dashed #ddd}
+.lab div{white-space:pre-line}
+.va-c>:first-child,.va-e>:first-child{margin-top:auto}.va-c>:last-child{margin-bottom:auto}
+.hint{font-size:12px;color:var(--mu)}
+@media(max-width:860px){.app{grid-template-columns:1fr}aside{position:static;max-height:none;border-right:0}}
+@media print{body{background:#fff}aside,.bar{display:none}.app{display:block}main{padding:0;overflow:visible}
+#pages{zoom:1!important;transform:none!important}.page{margin:0;box-shadow:none;break-after:page}.lab.gd,.lab.skip{outline:none}}
+</style>
+<style id="pg"></style>
+</head>
+<body>
+<div class="app">
+<aside>
+ <h1>Cetak Label Undangan</h1>
+ <p class="sub">Atur ukuran label, data tamu, dan font. Pengaturan tersimpan otomatis di browser ini.</p>
+
+ <h2 style="margin-top:12px">Template</h2>
+ <select id="tpl" aria-label="Pilih template"></select>
+ <div class="bar" style="margin:8px 0 4px"><button id="tapply" class="p">Terapkan</button><button id="tdel">Hapus</button><button id="texp">Ekspor</button><button id="timpb">Impor</button><input type="file" id="timp" accept=".json,application/json" hidden></div>
+ <div class="g" style="grid-template-columns:1fr auto"><input id="tname" placeholder="Nama template baru"><button id="tsave">Simpan pengaturan saat ini</button></div>
+ <label style="margin-top:6px"><input type="checkbox" id="tdata"> Sertakan data tamu saat simpan / ekspor</label>
+ <p class="hint" id="tmsg">Template menyimpan ukuran, font, dan tata letak. Ekspor menghasilkan file .json yang bisa diimpor di perangkat lain.</p>
+
+ <h2>Ukuran label &amp; kertas</h2>
+ <div class="g">
+  <div><label>Ukuran label</label><select id="preset"></select></div>
+  <div><label>Kertas</label><select id="paper"><option value="210,297">A4</option><option value="215,330">F4 / Folio</option><option value="216,279">Letter</option><option value="148,210">A5</option><option value="c">Kustom</option></select></div>
+  <div style="grid-column:1/-1"><label>Mode cetak</label><select data-k="mode"><option value="sheet">Lembar stiker (banyak label per kertas)</option><option value="roll">Langsung per label (printer label / roll, 1 label = 1 halaman)</option></select></div>
+  <div><label>Geser horizontal (mm)</label><input type="number" data-k="offx" step="0.5"></div><div><label>Geser vertikal (mm)</label><input type="number" data-k="offy" step="0.5"></div>
+  <div><label>Orientasi kertas</label><select id="orient"><option value="p">Potret</option><option value="l">Lanskap (melintang)</option></select></div><div></div>
+  <div><label>Lebar label (mm)</label><input type="number" data-k="lw" min="10" step="0.5"></div>
+  <div><label>Tinggi label (mm)</label><input type="number" data-k="lh" min="8" step="0.5"></div>
+  <div><label>Lebar kertas (mm)</label><input type="number" data-k="pw" min="50"></div>
+  <div><label>Tinggi kertas (mm)</label><input type="number" data-k="ph" min="50"></div>
+  <div><label>Margin atas (mm)</label><input type="number" data-k="mt" min="0" step="0.5"></div>
+  <div><label>Margin kiri (mm)</label><input type="number" data-k="ml" min="0" step="0.5"></div>
+  <div><label>Jarak horizontal (mm)</label><input type="number" data-k="gx" min="0" step="0.5"></div>
+  <div><label>Jarak vertikal (mm)</label><input type="number" data-k="gy" min="0" step="0.5"></div>
+  <div><label>Padding dalam label (mm)</label><input type="number" data-k="pad" min="0" step="0.5"></div>
+  <div><label>Mulai dari label ke-</label><input type="number" data-k="start" min="1"></div>
+ </div>
+ <p class="hint" id="calc"></p>
+
+ <h2>Font &amp; tata letak</h2>
+ <div class="g">
+  <div><label>Jenis font</label><select id="font" data-k="font"></select></div>
+  <div><label>Rata teks</label><select data-k="align"><option value="left">Kiri</option><option value="center">Tengah</option><option value="right">Kanan</option></select></div>
+  <div><label>Posisi vertikal</label><select data-k="valign"><option value="flex-start">Atas</option><option value="center">Tengah</option><option value="flex-end">Bawah</option><option value="space-evenly">Sebar merata</option></select></div>
+  <div><label>Arah teks pada label</label><select data-k="rot"><option value="0">Normal (mendatar)</option><option value="90">Putar 90° (dibaca ke bawah)</option><option value="270">Putar 270° (dibaca ke atas)</option></select></div><div><label>Jarak antar bagian (mm)</label><input type="number" data-k="fgap" min="0" step="0.5"></div><div><label>Salinan per tamu</label><input type="number" data-k="copies" min="1" max="50"></div>
+  
+  <div><label>Teks penutup</label><input data-k="post"></div>
+ </div>
+ <div class="g" style="margin-top:8px"><div><label>Logo (gambar)</label><input type="file" id="logo" accept="image/*"></div>
+ <div><label>Posisi logo</label><select data-k="logoPos"><option value="top">Atas</option><option value="bottom">Bawah</option></select></div><div><label>Tinggi logo (mm)</label><input type="number" data-k="logoH" min="2" step="0.5"></div></div>
+ <button id="rmlogo" style="margin-top:6px">Hapus logo</button>
+ <label style="margin-top:8px"><input type="checkbox" data-k="fit"> Kecilkan font otomatis bila teks melebihi label</label>
+ <label><input type="checkbox" data-k="guides"> Tampilkan garis bantu di layar (tidak ikut tercetak)</label>
+ <div style="margin-top:10px" id="flds"></div>
+ <p class="hint">Kolom: tampil · ukuran font (pt) · B tebal · I miring · Aa huruf kapital.</p>
+
+ <h2>Data tamu</h2>
+ <label>Cetak hanya baris nomor (kosong = semua)</label><input data-k="only" placeholder="mis. 1-5, 8, 10-12" style="margin-bottom:10px">
+ <label>Tempel dari Excel / CSV (kolom: Nama, Jabatan, Alamat, Lainnya)</label>
+ <textarea id="paste" rows="4" placeholder="Budi Santoso&#9;Kepala Dinas&#9;Jl. Merdeka No. 1, Parepare"></textarea>
+ <div class="bar" style="margin:8px 0">
+  <button id="imp">Tambahkan dari tempelan</button>
+  <button id="add">+ Baris baru</button>
+  <button id="clr">Hapus semua</button><button id="dtpl" class="p">Unduh template data</button><button id="csvb">Impor file (Excel/CSV)</button><button id="csv">Unduh data CSV</button><input type="file" id="csvf" accept=".xlsx,.xls,.csv,.tsv,.txt" hidden>
+ </div>
+ <p class="hint" id="dmsg">Unduh template, isi di Excel atau aplikasi lain, lalu impor kembali file-nya. Baris contoh tidak ikut diimpor.</p>
+ <div id="rows"></div>
+</aside>
+<main>
+ <div class="bar">
+  <button class="p" id="print">Cetak label</button>
+  <label style="display:flex;gap:6px;align-items:center">Zoom <input type="range" id="zoom" min="40" max="160" value="100" style="width:120px"></label>
+  <span class="info" id="info"></span>
+ </div>
+ <div id="pages"></div>
+</main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const FONTS=["Figtree","Playfair Display","Lora","Cormorant Garamond","Montserrat","Great Vibes","Georgia","Times New Roman","Arial","Verdana","Courier New"];
+const PRESETS={ "50×30 mm":[50,30],"64×32 mm":[64,32],"70×35 mm":[70,35],"75×38 mm":[75,38],"90×50 mm":[90,50],"100×50 mm":[100,50],"100×70 mm":[100,70],"105×74 mm (A7)":[105,74],"Kustom":null };
+const FN=[["nama","Nama"],["jab","Jabatan"],["alamat","Alamat"],["lain","Lainnya"],["post","Penutup"]];
+const DEF={lw:75,lh:38,pw:210,ph:297,mt:10,ml:10,gx:3,gy:0,pad:3,start:1,copies:1,only:"",mode:"sheet",offx:0,offy:0,fgap:0.5,preSide:true,sgap:2,rot:"0",land:false,logo:"",logoPos:"top",logoH:10,numfmt:"No. {n}",font:"Figtree",align:"left",valign:"center",pre:"Yth.",post:"di Tempat",fit:true,guides:true,preset:"75×38 mm",paper:"210,297",
+ f:{no:{on:false,s:8,b:0,i:0,u:0},pre:{on:true,s:10,b:0,i:0,u:0},nama:{on:true,s:13,b:1,i:0,u:0},jab:{on:true,s:10,b:0,i:1,u:0},alamat:{on:true,s:10,b:0,i:0,u:0},lain:{on:false,s:9,b:0,i:0,u:0},post:{on:true,s:10,b:0,i:0,u:0}},
+ rows:[{nama:"Bapak H. Andi Pratama, S.E.",jab:"Kepala Dinas Pendidikan",alamat:"Jl. Jenderal Sudirman No. 12\nParepare, Sulawesi Selatan",lain:""},{nama:"Ibu Dr. Siti Nurhaliza",jab:"Direktur Utama PT Maju Jaya",alamat:"Jl. Bau Massepe No. 45\nParepare",lain:""}]};
+let S;
+try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem("lbl-v1")||"{}"))}catch(e){S=structuredClone(DEF)}
+S.f=Object.assign(structuredClone(DEF.f),S.f);if(!Array.isArray(S.rows))S.rows=[];
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function save(){try{localStorage.setItem("lbl-v1",JSON.stringify(S))}catch(e){}}
+
+// preset & font selects
+$("#preset").innerHTML=Object.keys(PRESETS).map(k=>`<option>${k}</option>`).join("");
+$("#font").innerHTML=FONTS.map(f=>`<option style="font-family:'${f}'">${f}</option>`).join("");
+// generic bindings
+$$("[data-k]").forEach(el=>{const k=el.dataset.k;
+ if(el.type==="checkbox")el.checked=!!S[k];else el.value=S[k];
+ el.addEventListener("input",()=>{S[k]=el.type==="checkbox"?el.checked:el.type==="number"?(parseFloat(el.value)||0):el.value;
+  if(["lw","lh"].includes(k)){S.preset="Kustom";$("#preset").value="Kustom"}
+  if(["pw","ph"].includes(k)){S.paper="c";$("#paper").value="c";S.land=S.pw>S.ph;$("#orient").value=S.land?"l":"p"}
+  render()})});
+$("#preset").value=S.preset;$("#paper").value=S.paper;
+$("#preset").onchange=e=>{S.preset=e.target.value;const p=PRESETS[S.preset];if(p){S.lw=p[0];S.lh=p[1];sync()}render()};
+$("#paper").onchange=e=>{S.paper=e.target.value;if(S.paper!=="c"){[S.pw,S.ph]=S.paper.split(",").map(Number);if(S.land)[S.pw,S.ph]=[S.ph,S.pw];sync()}render()};
+$("#orient").value=S.land?"l":"p";
+$("#orient").onchange=e=>{S.land=e.target.value==="l";if((S.pw>S.ph)!==S.land)[S.pw,S.ph]=[S.ph,S.pw];sync();autoZoom();render()};
+function sync(){$$("[data-k]").forEach(el=>{const k=el.dataset.k;if(el.type==="checkbox")el.checked=!!S[k];else el.value=S[k]})}
+
+// field format rows
+function drawFields(){$("#flds").innerHTML=FN.map(([k,n])=>{const f=S.f[k];
+ return `<div class="fr"><input type="checkbox" data-f="${k}" data-p="on" ${f.on?"checked":""} aria-label="Tampilkan ${n}"><span class="t">${n}</span>
+ <input type="number" data-f="${k}" data-p="s" value="${f.s}" min="4" max="60" step="0.5" aria-label="Ukuran ${n}">
+ ${["b","i","u"].map(p=>`<button data-f="${k}" data-t="${p}" class="${f[p]?"on":""}" title="${{b:"Tebal",i:"Miring",u:"Kapital"}[p]}">${{b:"B",i:"I",u:"Aa"}[p]}</button>`).join("")}<span></span></div>`}).join("")
+ $$("[data-p]").forEach(el=>el.oninput=()=>{const f=S.f[el.dataset.f];f[el.dataset.p]=el.dataset.p==="on"?el.checked:parseFloat(el.value)||8;render()});
+ $$("[data-t]").forEach(el=>el.onclick=()=>{const f=S.f[el.dataset.f],p=el.dataset.t;f[p]=f[p]?0:1;el.classList.toggle("on");render()})}
+drawFields();
+
+// rows editor
+function drawRows(){$("#rows").innerHTML=S.rows.map((r,i)=>`<div class="row"><span class="hint" style="position:absolute;right:30px;top:5px">#${i+1}</span><button class="x" data-del="${i}" title="Hapus" aria-label="Hapus baris ${i+1}">✕</button>
+ <input class="w" data-r="${i}" data-c="nama" placeholder="Nama" value="${esc(r.nama)}">
+ <input data-r="${i}" data-c="jab" placeholder="Jabatan" value="${esc(r.jab)}">
+ <input data-r="${i}" data-c="lain" placeholder="Lainnya" value="${esc(r.lain)}">
+ <textarea class="w" rows="2" data-r="${i}" data-c="alamat" placeholder="Alamat">${esc(r.alamat)}</textarea></div>`).join("")||`<p class="hint">Belum ada data. Tempel dari Excel atau tambah baris baru.</p>`;
+ $$("[data-r]").forEach(el=>el.oninput=()=>{S.rows[el.dataset.r][el.dataset.c]=el.value;render()});
+ $$("[data-del]").forEach(el=>el.onclick=()=>{S.rows.splice(el.dataset.del,1);drawRows();render()})}
+$("#add").onclick=()=>{S.rows.push({nama:"",jab:"",alamat:"",lain:""});drawRows();render()};
+$("#clr").onclick=e=>{const b=e.target;if(b.dataset.arm){S.rows=[];drawRows();render();b.textContent="Hapus semua";delete b.dataset.arm;return}b.dataset.arm=1;b.textContent="Klik lagi untuk hapus";setTimeout(()=>{b.textContent="Hapus semua";delete b.dataset.arm},3000)};
+$("#imp").onclick=()=>{const t=$("#paste").value.trim();if(!t)return;
+ t.split(/\r?\n/).forEach(l=>{if(!l.trim())return;const c=l.includes("\t")?l.split("\t"):l.includes(";")?l.split(";"):l.split(",");
+  S.rows.push({nama:(c[0]||"").trim(),jab:(c[1]||"").trim(),alamat:(c[2]||"").trim(),lain:(c[3]||"").trim()})});
+ $("#paste").value="";drawRows();render()};
+
+// render
+const logoTag=()=>`<img src="${S.logo}" alt="" style="height:${S.logoH}mm;max-width:100%;object-fit:contain;flex:none;align-self:${S.align==="left"?"flex-start":S.align==="right"?"flex-end":"center"};padding:.6mm 0">`;
+function render(){save();
+ const roll=S.mode==="roll",{lw,lh,pad}=S,rot=Number(S.rot),ox=+S.offx||0,oy=+S.offy||0;
+ const pw=roll?lw:S.pw,ph=roll?lh:S.ph,mt=roll?oy:S.mt+oy,ml=roll?ox:S.ml+ox,gx=roll?0:S.gx,gy=roll?0:S.gy;
+ const jc=S.valign==="space-evenly"?"space-evenly":"flex-start",vc=S.valign==="center"?" va-c":S.valign==="flex-end"?" va-e":"";
+ const cols=Math.max(1,Math.floor((pw-ml+gx)/(lw+gx))),rws=Math.max(1,Math.floor((ph-mt+gy)/(lh+gy))),per=cols*rws;
+ $("#calc").textContent=roll?`Mode langsung: tiap label = 1 halaman seukuran ${lw}×${lh} mm. Pilih kertas dengan ukuran yang sama di dialog cetak.`:`Muat ${cols} kolom × ${rws} baris = ${per} label per halaman.`;
+ window.EW=pw;$("#pg").textContent=`@page{size:${pw}mm ${ph}mm;margin:0}`;
+ const items=[];for(let i=1;i<(roll?1:S.start);i++)items.push(null);
+ const sel=new Set();String(S.only||"").split(/[,;\s]+/).forEach(x=>{const m=x.match(/^(\d+)(?:-(\d+))?$/);if(m){const a=+m[1],b=+(m[2]||m[1]);for(let i=a;i<=Math.min(b,a+5000);i++)sel.add(i)}});
+ S.rows.forEach((r,ri)=>{if(!(r.nama||r.jab||r.alamat||r.lain))return;if(sel.size&&!sel.has(ri+1))return;const no=String(r.no||"").trim()||String(ri+1).padStart(3,"0");for(let c=0;c<Math.max(1,S.copies);c++)items.push({...r,_n:no})});
+ const pages=Math.max(1,Math.ceil(items.length/per));
+ const txt=(k,r)=>k==="no"?S.numfmt.replace("{n}",r._n):k==="pre"?S.pre:k==="post"?S.post:r[k];
+ let h="";
+ for(let p=0;p<pages;p++){
+  h+=`<section class="page" style="width:${pw}mm;height:${ph}mm;padding:${mt}mm 0 0 ${ml}mm;grid-template-columns:repeat(${cols},${lw}mm);grid-auto-rows:${lh}mm;gap:${gy}mm ${gx}mm">`;
+  for(let i=0;i<per;i++){const r=items[p*per+i];
+   const cls=r?(S.guides?"lab gd":"lab"):(S.guides&&items[p*per+i]===null?"lab skip":"lab");
+   h+=`<div class="${cls}${rot?"":vc}" style="width:${lw}mm;height:${lh}mm;position:relative;padding:${rot?0:pad}mm;justify-content:${jc};gap:${S.fgap}mm;text-align:${S.align};font-family:'${S.font}',serif;--k:1">`;
+   if(rot&&r)h+=`<div class="rt${vc}" style="position:absolute;display:flex;flex-direction:column;width:${lh-2*pad}mm;height:${lw-2*pad}mm;${rot===90?`left:${lw-pad}mm;top:${pad}mm;transform:rotate(90deg)`:`left:${pad}mm;top:${lh-pad}mm;transform:rotate(-90deg)`};transform-origin:0 0;justify-content:${jc};gap:${S.fgap}mm">`;
+   if(r&&S.logo&&S.logoPos==="top")h+=logoTag();
+   if(r){const part={};FN.forEach(([k])=>{const f=S.f[k],t=String(txt(k,r)||"").replace(/^\s+|\s+$/g,"");if(!f.on||!t)return;
+    part[k]=`<div style="font-size:calc(${f.s}pt*var(--k));font-weight:${f.b?700:400};font-style:${f.i?"italic":"normal"};text-transform:${f.u?"uppercase":"none"}">${esc(t)}</div>`});
+    if(S.preSide&&part.pre)h+=`<div style="display:flex;gap:${S.sgap}mm;align-items:flex-start"><div style="flex:none;text-align:left">${part.pre}</div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:${S.fgap}mm;text-align:${S.align}">${FN.filter(([k])=>k!=="pre").map(([k])=>part[k]||"").join("")}</div></div>`;
+    else h+=FN.map(([k])=>part[k]||"").join("")}
+   if(r&&S.logo&&S.logoPos==='bottom')h+=logoTag();
+   if(rot&&r)h+=`</div>`;
+   h+=`</div>`}
+  h+=`</section>`}
+ $("#pages").innerHTML=h;
+ $("#info").textContent=`${items.filter(Boolean).length} label · ${pages} halaman`;
+ if(S.fit)fit();
+ zoom()}
+function fit(){$$(".lab").forEach(l=>{let k=1;const t=l.querySelector(".rt")||l;while(t.scrollHeight>t.clientHeight+1&&k>0.35){k-=0.04;l.style.setProperty("--k",k.toFixed(2))}})}
+function zoom(){const z=$("#zoom").value/100,PW=window.EW||S.pw,w=PW*3.7795*z;
+ $("#pages").style.zoom="";$("#pages").style.transform=`scale(${z})`;$("#pages").style.width=PW+"mm";
+ $("#pages").style.marginBottom=`${-(1-z)*$("#pages").offsetHeight}px`;$("#pages").style.marginRight=`${-(1-z)*PW*3.78}px`}
+$("#zoom").oninput=zoom;
+$("#print").onclick=()=>window.print();
+function autoZoom(){const a=window.innerWidth>860?window.innerWidth-440:window.innerWidth-32,z=Math.min(1.2,a/(S.pw*3.7795));$("#zoom").value=Math.max(40,Math.round(z*100))}
+function parse(t){const d=t.includes("\t")?"\t":(t.split(";").length>t.split(",").length?";":",");const o=[];let r=[],c="",q=0;for(let i=0;i<t.length;i++){const x=t[i];if(q){if(x==='"'&&t[i+1]==='"'){c+='"';i++}else if(x==='"')q=0;else c+=x}else if(x==='"')q=1;else if(x===d){r.push(c);c=""}else if(x==="\n"||x==="\r"){if(x==="\r"&&t[i+1]==="\n")i++;r.push(c);c="";o.push(r);r=[]}else c+=x}r.push(c);o.push(r);return o.filter(r=>r.some(v=>v.trim()))}
+$("#csvb").onclick=()=>$("#csvf").click();
+$("#csvf").onchange=async e=>{const f=e.target.files[0];if(!f)return;let rs;
+ try{if(/\.xlsx?$/i.test(f.name)){if(!window.XLSX)throw 0;const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});rs=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:""})}else rs=parse((await f.text()).replace(/^\uFEFF/,""))}
+ catch(err){$("#dmsg").textContent="File tidak bisa dibaca. Simpan sebagai .xlsx atau .csv lalu coba lagi.";e.target.value="";return}
+ rs=rs.filter(c=>c.some(v=>String(v).trim()));if(rs[0]&&/^nama$/i.test(String(rs[0][0]||"").trim()))rs.shift();
+ rs=rs.filter(c=>!/^contoh:/i.test(String(c[0]||"").trim()));
+ rs.forEach(c=>S.rows.push({nama:String(c[0]||"").trim(),jab:String(c[1]||"").trim(),alamat:String(c[2]||"").trim(),lain:String(c[3]||"").trim()}));
+ drawRows();render();$("#dmsg").textContent=`${rs.length} baris berhasil diimpor.`;e.target.value=""};
+$("#dtpl").onclick=async()=>{const head=["Nama","Jabatan","Alamat","Lainnya"],ex=["Contoh: Bapak H. Andi Pratama, S.E.","Kepala Dinas Pendidikan","Jl. Jenderal Sudirman No. 12, Parepare",""];
+ try{if(!window.XLSX)throw 0;const ws=XLSX.utils.aoa_to_sheet([head,ex]);ws["!cols"]=[{wch:34},{wch:28},{wch:50},{wch:20}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Data tamu");
+  const d=await claude.use("downloads");if(!d)throw 0;await d.save({filename:"template-data-tamu.xlsx",data:new Blob([XLSX.write(wb,{type:"array",bookType:"xlsx"})])});return}catch(e){if(e&&e.code==="declined")return}
+ saveFile("template-data-tamu.csv","\uFEFF"+head.join(",")+"\n"+ex.map(v=>'"'+v+'"').join(",")+"\n")};
+$("#csv").onclick=()=>{const q=v=>'"'+String(v||"").replace(/"/g,'""')+'"';const t="\uFEFFNama,Jabatan,Alamat,Lainnya\n"+S.rows.map(r=>[r.nama,r.jab,r.alamat,r.lain].map(q).join(",")).join("\n");
+ saveFile("data-tamu.csv",t)};
+$("#logo").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,500/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);S.logo=c.toDataURL("image/png");render()};im.src=rd.result};rd.readAsDataURL(f)};
+$("#rmlogo").onclick=()=>{S.logo="";$("#logo").value="";render()};
+$("[data-k=mode]").addEventListener("change",()=>{autoZoom();zoom()});
+async function saveFile(name,data){try{const d=window.claude&&await claude.use("downloads");if(d){await d.save({filename:name,data});return}}catch(e){if(e&&e.code==="declined")return}
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data]));a.download=name;a.click()}
+// template
+const BUILT={"Klasik — serif, rata tengah":{font:"Playfair Display",align:"center",valign:"center",fgap:0.8,f:{nama:{s:14,b:1},jab:{s:10,i:1},alamat:{s:10,i:0},post:{s:10,i:1}}},
+"Resmi — rata kiri":{font:"Figtree",align:"left",valign:"flex-start",f:{nama:{s:12,b:1},jab:{s:10,i:0},alamat:{s:10},post:{s:10}}},
+"Elegan — tulisan tangan":{font:"Great Vibes",align:"center",valign:"center",f:{nama:{s:20,b:0},jab:{s:14,i:0},alamat:{s:13},post:{s:13}}},
+"Ringkas — label kecil 50×30":{lw:50,lh:30,preset:"50×30 mm",font:"Montserrat",align:"left",valign:"center",pad:2,fgap:0.3,f:{nama:{s:10,b:1},jab:{s:8},alamat:{s:8},post:{s:8}}},
+"Langsung — printer label 100×50":{mode:"roll",lw:100,lh:50,preset:"100×50 mm",font:"Figtree",align:"center",valign:"center",f:{nama:{s:16,b:1},jab:{s:11,i:0},alamat:{s:11},post:{s:11}}}};
+const BASE={mode:"sheet",rot:"0",pad:3,fgap:0.5,lw:75,lh:38,preset:"75×38 mm",offx:0,offy:0,valign:"center",align:"left"};
+let TPL={};try{TPL=JSON.parse(localStorage.getItem("lbl-tpl-v1")||"{}")}catch(e){}
+const saveT=()=>{try{localStorage.setItem("lbl-tpl-v1",JSON.stringify(TPL))}catch(e){msg("Template tidak bisa disimpan di browser ini. Gunakan Ekspor.")}};
+const msg=t=>$("#tmsg").textContent=t;
+function drawT(sel){const u=Object.keys(TPL);$("#tpl").innerHTML='<optgroup label="Bawaan">'+Object.keys(BUILT).map(k=>`<option value="b:${esc(k)}">${esc(k)}</option>`).join("")+'</optgroup>'+(u.length?'<optgroup label="Tersimpan">'+u.map(k=>`<option value="u:${esc(k)}">${esc(k)}</option>`).join("")+'</optgroup>':"");if(sel)$("#tpl").value=sel}
+const snap=w=>{const o=structuredClone(S);delete o.rows;if(w)o.rows=structuredClone(S.rows);return o};
+function applyT(t){const o={...t};delete o.rows;Object.assign(S,o);
+ if(o.f){const f={};FN.forEach(([k])=>f[k]=Object.assign({},DEF.f[k],o.f[k]));S.f=f}
+ if(Array.isArray(t.rows))S.rows=t.rows;
+ sync();$("#preset").value=S.preset;$("#paper").value=S.paper;$("#orient").value=S.land?"l":"p";drawFields();drawRows();autoZoom();render()}
+$("#tapply").onclick=()=>{const v=$("#tpl").value,n=v.slice(2);if(v[0]==="b")applyT({...BASE,...BUILT[n]});else if(TPL[n])applyT(TPL[n]);else return;msg(`Template "${n}" diterapkan.`)};
+$("#tsave").onclick=()=>{const n=$("#tname").value.trim();if(!n){msg("Isi nama template dulu.");return}TPL[n]=snap($("#tdata").checked);saveT();drawT("u:"+n);$("#tname").value="";msg(`Template "${n}" tersimpan.`)};
+$("#tdel").onclick=()=>{const v=$("#tpl").value,n=v.slice(2);if(v[0]!=="u"){msg("Template bawaan tidak bisa dihapus.");return}delete TPL[n];saveT();drawT();msg(`Template "${n}" dihapus.`)};
+$("#texp").onclick=()=>{const v=$("#tpl").value,n=v.slice(2)||"template";saveFile(n.replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"-")+".json",JSON.stringify({app:"label-undangan",v:1,name:n,template:snap($("#tdata").checked)},null,1))};
+$("#timpb").onclick=()=>$("#timp").click();
+$("#timp").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(x=>{try{const j=JSON.parse(x),t=j.template||j;if(typeof t!=="object"||!t||!(t.lw&&t.lh))throw 0;const n=(j.name||f.name.replace(/\.json$/i,"")).trim()||"Impor";TPL[n]=t;saveT();drawT("u:"+n);applyT(t);msg(`Template "${n}" diimpor dan diterapkan.`)}catch(err){msg("File template tidak valid.")}e.target.value=""})};
+drawT();
+drawRows();autoZoom();render();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+window.addEventListener("beforeprint",()=>{$("#pages").style.transform="none";$("#pages").style.margin="0"});
+window.addEventListener("afterprint",zoom);
+</script>
+</body>
+</html>
