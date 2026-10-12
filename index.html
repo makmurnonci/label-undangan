@@ -6,10 +6,10 @@
 <title>Cetak Label Undangan</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;700&family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&display=swap">
 <style>
-:root{--bg:#eceef1;--pn:#fff;--tx:#1b2430;--mu:#5e6b7a;--ln:#d5dae1;--ac:#0b6b5d;--ac2:#e6f3f0;
+:root{--bg:#eceef1;--pn:#fff;--tx:#1b2430;--mu:#5e6b7a;--ln:#d5dae1;--ac:#0b6b5d;--ac2:#e6f3f0;--pr:#c2410c;--prt:#fff;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181d;--pn:#1d232b;--tx:#e8ecf1;--mu:#98a4b3;--ln:#303944;--ac:#3cc4ae;--ac2:#16312d}}
-:root[data-theme="dark"]{--bg:#14181d;--pn:#1d232b;--tx:#e8ecf1;--mu:#98a4b3;--ln:#303944;--ac:#3cc4ae;--ac2:#16312d}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181d;--pn:#1d232b;--tx:#e8ecf1;--mu:#98a4b3;--ln:#303944;--ac:#3cc4ae;--ac2:#16312d;--pr:#fb923c;--prt:#1b1206}}
+:root[data-theme="dark"]{--bg:#14181d;--pn:#1d232b;--tx:#e8ecf1;--mu:#98a4b3;--ln:#303944;--ac:#3cc4ae;--ac2:#16312d;--pr:#fb923c;--prt:#1b1206}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 Figtree,system-ui,sans-serif}
@@ -40,15 +40,20 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
 .lab div{white-space:pre-line}
 .va-c>:first-child,.va-e>:first-child{margin-top:auto}.va-c>:last-child{margin-bottom:auto}
 .hint{font-size:12px;color:var(--mu)}
+#gate{position:fixed;inset:0;z-index:99;background:var(--bg);align-items:center;justify-content:center;padding:24px;text-align:center}#gate .gc{max-width:380px;background:var(--pn);border:1px solid var(--ln);border-radius:12px;padding:24px}
+#print{background:var(--pr);border-color:var(--pr);color:var(--prt);font-weight:700}
+.pr{border-left:3px solid var(--pr);padding-left:10px;background:color-mix(in srgb,var(--pr) 9%,transparent);border-radius:0 8px 8px 0;padding-top:6px;padding-bottom:6px}
+.ck{display:flex;gap:8px;align-items:center;color:var(--tx);font-size:13px;padding:4px 2px}.row.off{opacity:.55}
 .cap{font-size:12px;color:var(--mu);margin:0 0 4px}.cap.dim{color:#b45309}.page.np{opacity:.35}
 .or{display:grid;grid-template-columns:72px 1fr;gap:2px 8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--ln)}.or input{padding:3px 6px}.or .on{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.or .ob{grid-column:2;font-size:11px;color:var(--mu)}
 @media(max-width:860px){.app{grid-template-columns:1fr}aside{position:static;max-height:none;border-right:0}}
-@media print{body{background:#fff}aside,.bar,.cap,.page.np{display:none!important}.app{display:block}main{padding:0;overflow:visible}
+@media print{body{background:#fff}aside,.bar,.cap,.page.np,#gate{display:none!important}.app{display:block}main{padding:0;overflow:visible}
 #pages{zoom:1!important;transform:none!important}.page{margin:0;box-shadow:none;break-after:page}.lab.gd,.lab.skip{outline:none}}
 </style>
 <style id="pg"></style>
 </head>
 <body>
+<div id="gate" style="display:none"><div class="gc"><div style="font-size:34px" aria-hidden="true">🔒</div><h1 style="font-size:18px;margin:8px 0">Cetak Label Undangan</h1><p id="gmsg" class="sub"></p><button id="gretry" class="p" hidden>Coba lagi</button></div></div>
 <div class="app">
 <aside>
  <h1>Cetak Label Undangan</h1>
@@ -103,16 +108,19 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
  <p class="hint">Kolom: tampil · ukuran font (pt) · B tebal · I miring · Aa huruf kapital.</p>
 
  <h2>Data tamu</h2>
- <div class="g" style="margin-bottom:10px"><div><label>Cetak hanya nomor urut</label><input data-k="only" placeholder="mis. 1-5, 8"></div><div><label>Cetak hanya kertas label ke-</label><input data-k="sheets" placeholder="mis. 1-3, 5"></div>
-  <div><label>Pasang label mulai di kertas ke-</label><input type="number" data-k="sheet0" min="1" max="200"></div></div>
+ <div class="pr" style="margin:8px 0 10px"><div class="hint" style="color:var(--pr);font-weight:700;margin-bottom:4px">Menu cetak</div><div class="g"><div><label>Cetak hanya nomor urut</label><input data-k="only" placeholder="mis. 1-5, 8"></div><div><label>Cetak hanya kertas label ke-</label><input data-k="sheets" placeholder="mis. 1-3, 5"></div>
+  <div><label>Pasang label mulai di kertas ke-</label><input type="number" data-k="sheet0" min="1" max="200"></div></div></div>
  <label>Tempel dari Excel / CSV (kolom: Nama, Jabatan, Alamat, Lainnya)</label>
  <textarea id="paste" rows="4" placeholder="Budi Santoso&#9;Kepala Dinas&#9;Jl. Merdeka No. 1, Parepare"></textarea>
  <div class="bar" style="margin:8px 0">
   <button id="imp">Tambahkan dari tempelan</button>
   <button id="add">+ Baris baru</button>
-  <button id="clr">Hapus semua</button><button id="dtpl" class="p">Unduh template data</button><button id="csvb">Impor file (Excel/CSV)</button><button id="csv">Unduh data CSV</button><input type="file" id="csvf" accept=".xlsx,.xls,.csv,.tsv,.txt" hidden>
+  <button id="clr">Hapus semua</button><button id="dtpl" class="p">Unduh template data</button><button id="csvb">Impor file (Excel/CSV)</button><button id="csv">Unduh data CSV</button><input type="file" id="csvf" accept=".xlsx,.xls,.csv,.tsv,.txt" hidden><button id="jexp">Ekspor JSON</button><button id="jimpb">Impor JSON</button><button id="jtpl">Contoh JSON</button><input type="file" id="jimp" accept=".json,application/json" hidden>
  </div>
+ <label><input type="checkbox" id="jrep"> Ganti data yang ada saat impor JSON</label>
  <p class="hint" id="dmsg">Unduh template, isi di Excel atau aplikasi lain, lalu impor kembali file-nya. Baris contoh tidak ikut diimpor.</p>
+ <div class="bar" style="margin:8px 0"><input id="q" placeholder="Cari nama…" style="flex:1 1 140px;width:auto"><button id="ckall">Centang semua</button><button id="ckno">Kosongkan</button></div>
+ <p class="hint" id="ckn"></p>
  <div id="rows"></div>
  <h2>Nomor urut &amp; penempatan di kertas</h2>
  <p class="hint">Isi nomor urut di sini (terpisah dari data). Label disusun ke kertas berurutan dari nomor terkecil, dan tidak dicetak di label. Kosong = mengikuti urutan daftar. Di bawah tiap nama terlihat kertas, baris, dan kolomnya.</p>
@@ -180,13 +188,14 @@ function drawFields(){$("#flds").innerHTML=FN.map(([k,n])=>{const f=S.f[k];
 drawFields();
 
 // rows editor
-function drawRows(){$("#rows").innerHTML=S.rows.map((r,i)=>`<div class="row"><span class="hint" style="position:absolute;right:30px;top:5px">#${i+1}</span><button class="x" data-del="${i}" title="Hapus" aria-label="Hapus baris ${i+1}">✕</button>
+function drawRows(){$("#rows").innerHTML=S.rows.map((r,i)=>`<div class="row${r.inc===false?" off":""}"><span class="hint" style="position:absolute;right:30px;top:5px">#${i+1}</span><button class="x" data-del="${i}" title="Hapus" aria-label="Hapus baris ${i+1}">✕</button>
  <input class="w" data-r="${i}" data-c="nama" placeholder="Nama" value="${esc(r.nama)}">
  <input data-r="${i}" data-c="jab" placeholder="Jabatan" value="${esc(r.jab)}">
- <input data-r="${i}" data-c="lain" placeholder="Lainnya" value="${esc(r.lain)}">
+ <label class="ck"><input type="checkbox" data-inc="${i}" ${r.inc!==false?"checked":""}> Cetak di label</label>
  <textarea class="w" rows="2" data-r="${i}" data-c="alamat" placeholder="Alamat">${esc(r.alamat)}</textarea></div>`).join("")||`<p class="hint">Belum ada data. Tempel dari Excel atau tambah baris baru.</p>`;
  $$("[data-r]").forEach(el=>el.oninput=()=>{S.rows[el.dataset.r][el.dataset.c]=el.value;render()});
- $$("[data-del]").forEach(el=>el.onclick=()=>{S.rows.splice(el.dataset.del,1);drawRows();render()})}
+ $$("[data-inc]").forEach(el=>el.onchange=()=>{S.rows[el.dataset.inc].inc=el.checked;el.closest(".row").classList.toggle("off",!el.checked);updCount();render()});
+ $$("[data-del]").forEach(el=>el.onclick=()=>{S.rows.splice(el.dataset.del,1);drawRows();render()});filt()}
 $("#add").onclick=()=>{S.rows.push({nama:"",jab:"",alamat:"",lain:""});drawRows();render()};
 $("#clr").onclick=e=>{const b=e.target;if(b.dataset.arm){S.rows=[];drawRows();render();b.textContent="Hapus semua";delete b.dataset.arm;return}b.dataset.arm=1;b.textContent="Klik lagi untuk hapus";setTimeout(()=>{b.textContent="Hapus semua";delete b.dataset.arm},3000)};
 $("#imp").onclick=()=>{const t=$("#paste").value.trim();if(!t)return;
@@ -215,7 +224,7 @@ function render(){save();
  const rng=str=>{const st=new Set();String(str||"").split(/[,;\s]+/).forEach(x=>{const m=x.match(/^(\d+)(?:-(\d+))?$/);if(m){const a=+m[1],b=+(m[2]||m[1]);for(let i=a;i<=Math.min(b,a+5000);i++)st.add(i)}});return st};
  const sel=rng(S.only),shs=rng(S.sheets),first={};
  const en=(r,ri)=>{const v=parseFloat(r.no);return isFinite(v)?v:ri+1};
- S.rows.map((r,ri)=>({r,ri,n:en(r,ri)})).filter(o=>o.r.nama||o.r.jab||o.r.alamat||o.r.lain).sort((a,b)=>a.n-b.n||a.ri-b.ri).forEach(o=>{if(sel.size&&!sel.has(o.n))return;first[o.ri]=items.length;for(let c=0;c<Math.max(1,S.copies);c++)items.push({...o.r,_n:o.n})});
+ S.rows.map((r,ri)=>({r,ri,n:en(r,ri)})).filter(o=>o.r.inc!==false&&(o.r.nama||o.r.jab||o.r.alamat||o.r.lain)).sort((a,b)=>a.n-b.n||a.ri-b.ri).forEach(o=>{if(sel.size&&!sel.has(o.n))return;first[o.ri]=items.length;for(let c=0;c<Math.max(1,S.copies);c++)items.push({...o.r,_n:o.n})});
  const pages=Math.max(1,Math.ceil(items.length/per));
  const txt=(k,r)=>k==="no"?S.numfmt.replace("{n}",r._n):k==="pre"?S.pre:k==="post"?S.post:r[k];
  let h="";
@@ -292,8 +301,32 @@ $("#tdel").onclick=()=>{const v=$("#tpl").value,n=v.slice(2);if(v[0]!=="u"){msg(
 $("#texp").onclick=()=>{const v=$("#tpl").value,n=v.slice(2)||"template";saveFile(n.replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"-")+".json",JSON.stringify({app:"label-undangan",v:1,name:n,template:snap($("#tdata").checked)},null,1))};
 $("#timpb").onclick=()=>$("#timp").click();
 $("#timp").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(x=>{try{const j=JSON.parse(x),t=j.template||j;if(typeof t!=="object"||!t||!(t.lw&&t.lh))throw 0;const n=(j.name||f.name.replace(/\.json$/i,"")).trim()||"Impor";TPL[n]=t;saveT();drawT("u:"+n);applyT(t);msg(`Template "${n}" diimpor dan diterapkan.`)}catch(err){msg("File template tidak valid.")}e.target.value=""})};
+function vis(){const q=$("#q").value.trim().toLowerCase();return S.rows.map((r,i)=>i).filter(i=>!q||(S.rows[i].nama+" "+S.rows[i].jab+" "+S.rows[i].alamat).toLowerCase().includes(q))}
+function updCount(){const n=S.rows.filter(r=>r.inc!==false).length;$("#ckn").textContent=`${n} dari ${S.rows.length} nama dicentang dan masuk ke kertas label.`}
+function filt(){const v=new Set(vis());$$("#rows .row").forEach((el,i)=>el.style.display=v.has(i)?"":"none");updCount()}
+$("#q").oninput=filt;
+$("#ckall").onclick=()=>{vis().forEach(i=>S.rows[i].inc=true);drawRows();render()};
+$("#ckno").onclick=()=>{vis().forEach(i=>S.rows[i].inc=false);drawRows();render()};
+const jRow=r=>({no:r.no||"",nama:r.nama||"",jabatan:r.jab||"",alamat:r.alamat||"",lainnya:r.lain||"",cetak:r.inc!==false});
+const fromJ=o=>({no:String(o.no??o.nomor??"").trim(),nama:String(o.nama??o.name??"").trim(),jab:String(o.jabatan??o.jab??"").trim(),alamat:String(o.alamat??o.address??"").trim(),lain:String(o.lainnya??o.lain??"").trim(),inc:!(o.cetak===false||o.dicetak===false||o.inc===false)});
+$("#jexp").onclick=()=>{saveFile("label-undangan.json",JSON.stringify({app:"label-undangan",v:2,diekspor:new Date().toISOString(),pengaturan:snap(false),data:S.rows.map(jRow)},null,1));$("#dmsg").textContent="JSON diekspor: pengaturan + data tamu."};
+$("#jtpl").onclick=()=>saveFile("contoh-data-tamu.json",JSON.stringify({app:"label-undangan",v:2,data:[{no:1,nama:"Contoh: Bapak H. Andi Pratama, S.E.",jabatan:"Kepala Dinas Pendidikan",alamat:"Jl. Jenderal Sudirman No. 12\nParepare",lainnya:""}]},null,1));
+$("#jimpb").onclick=()=>$("#jimp").click();
+$("#jimp").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(x=>{try{const j=JSON.parse(x.replace(/^\uFEFF/,""));
+ const arr=Array.isArray(j)?j:Array.isArray(j.data)?j.data:Array.isArray(j.rows)?j.rows:Array.isArray(j.tamu)?j.tamu:null;
+ const set=(j&&(j.pengaturan||j.template))||(j&&j.lw&&j.lh?j:null);
+ if(!arr&&!set)throw 0;
+ if(set){const t={...set};delete t.rows;applyT(t)}
+ let n=0;if(arr){const rows=arr.filter(o=>o&&typeof o==="object").map(fromJ).filter(r=>!/^contoh:/i.test(r.nama)&&(r.nama||r.jab||r.alamat||r.lain));if($("#jrep").checked)S.rows=[];rows.forEach(r=>S.rows.push(r));n=rows.length;drawRows();render()}
+ $("#dmsg").textContent=`JSON diimpor: ${n} baris data${set?" + pengaturan":""}.`}catch(err){$("#dmsg").textContent="File JSON tidak valid atau formatnya tidak dikenali."}e.target.value=""})};
 drawT();
 drawRows();autoZoom();render();
+// Pembatas akses: hanya akun yang dikenali (anggota/undangan pemilik) saat dibuka sebagai halaman terbit
+async function chk(){const g=$("#gate"),m=$("#gmsg"),b=$("#gretry");g.style.display="flex";b.hidden=true;m.textContent="Memeriksa akun…";let u=null;try{u=await claude.use("user")}catch(e){}
+ if(u){g.style.display="none";return}
+ m.textContent="Halaman ini hanya untuk akun yang didaftarkan (diundang) oleh pemilik. Masuk dengan akun yang sudah diundang, lalu coba lagi.";b.hidden=false}
+$("#gretry").onclick=chk;
+if(window.claude)chk();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
 window.addEventListener("beforeprint",()=>{$("#pages").style.transform="none";$("#pages").style.margin="0"});
 window.addEventListener("afterprint",zoom);
