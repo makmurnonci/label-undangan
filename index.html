@@ -93,7 +93,7 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
   <div><label>Jenis font</label><select id="font" data-k="font"></select></div>
   <div><label>Rata teks</label><select data-k="align"><option value="left">Kiri</option><option value="center">Tengah</option><option value="right">Kanan</option></select></div>
   <div><label>Posisi vertikal</label><select data-k="valign"><option value="flex-start">Atas</option><option value="center">Tengah</option><option value="flex-end">Bawah</option><option value="space-evenly">Sebar merata</option></select></div>
-  <div><label>Arah teks pada label</label><select data-k="rot"><option value="0">Normal (mendatar)</option><option value="90">Putar 90° (dibaca ke bawah)</option><option value="270">Putar 270° (dibaca ke atas)</option></select></div><div><label>Jarak antar bagian (mm)</label><input type="number" data-k="fgap" min="0" step="0.5"></div><div><label>Salinan per tamu</label><input type="number" data-k="copies" min="1" max="50"></div>
+  <div><label>Arah teks pada label</label><select data-k="rot"><option value="0">Normal (mendatar)</option><option value="90">Putar 90° (dibaca ke bawah)</option><option value="270">Putar 270° (dibaca ke atas)</option></select></div><div><label>Jarak antar bagian (mm)</label><input type="number" data-k="fgap" min="0" step="0.5"></div><div><label>Jarak nama ke jabatan (mm)</label><input type="number" data-k="gapNJ" min="-3" max="10" step="0.25"></div><div><label>Salinan per tamu</label><input type="number" data-k="copies" min="1" max="50"></div>
   
   <div><label>Teks penutup</label><input data-k="post"></div>
  </div>
@@ -128,6 +128,7 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
  <div class="bar">
   <button class="p" id="print">Cetak label</button>
   <select id="pgsel" aria-label="Cakupan cetak" title="Pilih kertas yang dicetak" style="width:auto"><option value="">Semua kertas</option></select>
+  <select id="outmode" data-k="out" aria-label="Keluaran cetak" title="Hasil saat tombol cetak diklik" style="width:auto"><option value="pdf">PDF langsung</option><option value="dialog">Dialog cetak</option></select>
   <label style="display:flex;gap:6px;align-items:center">Zoom <input type="range" id="zoom" min="40" max="160" value="100" style="width:120px"></label>
   <span class="info" id="info"></span>
  </div>
@@ -135,6 +136,8 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
 </main>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const FONTS=["Figtree","Playfair Display","Lora","Cormorant Garamond","Montserrat","Great Vibes","Georgia","Times New Roman","Arial","Verdana","Courier New"];
 const PRESETS={ "Tom & Jerry 121 — 38×76 mm (10/lembar)":{auto:false,lw:76,lh:38,pw:170,ph:210,paper:"c",land:false,mt:4,ml:7,gx:4,gy:3,pad:3,align:"center",valign:"center",f:{nama:{s:12},jab:{s:9},alamat:{s:9},post:{s:10,b:1}}},
@@ -142,7 +145,7 @@ const PRESETS={ "Tom & Jerry 121 — 38×76 mm (10/lembar)":{auto:false,lw:76,lh
 "Lembar label (potret 2×5 · lanskap 3×4)":{auto:true,nc:2,nr:5,ncl:3,nrl:4,mt:8,ml:6,gx:3,gy:3,align:"center",valign:"center",f:{nama:{s:14},jab:{s:10},alamat:{s:10},post:{s:10}}},
 "50×30 mm":[50,30],"64×32 mm":[64,32],"70×35 mm":[70,35],"75×38 mm":[75,38],"90×50 mm":[90,50],"100×50 mm":[100,50],"100×70 mm":[100,70],"105×74 mm (A7)":[105,74],"Kustom":null };
 const FN=[["nama","Nama"],["jab","Jabatan"],["alamat","Alamat"],["lain","Lainnya"],["post","Penutup"]];
-const DEF={lw:75,lh:38,pw:210,ph:297,mt:8,ml:6,gx:3,gy:3,pad:3,start:1,copies:1,auto:true,nc:2,nr:5,ncl:3,nrl:4,only:"",sheets:"",sheet0:1,mode:"sheet",offx:0,offy:0,fgap:0.5,preSide:true,sgap:2,rot:"0",land:false,logo:"",logoPos:"top",logoH:10,numfmt:"No. {n}",font:"Figtree",align:"left",valign:"center",pre:"Yth.",post:"di Tempat",fit:true,guides:true,preset:"Lembar label (potret 2×5 · lanskap 3×4)",paper:"210,297",
+const DEF={lw:75,lh:38,pw:210,ph:297,mt:8,ml:6,gx:3,gy:3,pad:3,start:1,copies:1,auto:true,nc:2,nr:5,ncl:3,nrl:4,only:"",sheets:"",sheet0:1,mode:"sheet",offx:0,offy:0,fgap:0.5,gapNJ:-0.5,out:"pdf",preSide:true,sgap:2,rot:"0",land:false,logo:"",logoPos:"top",logoH:10,numfmt:"No. {n}",font:"Figtree",align:"left",valign:"center",pre:"Yth.",post:"di Tempat",fit:true,guides:true,preset:"Lembar label (potret 2×5 · lanskap 3×4)",paper:"210,297",
  f:{no:{on:false,s:8,b:0,i:0,u:0},pre:{on:true,s:10,b:0,i:0,u:0},nama:{on:true,s:13,b:1,i:0,u:0},jab:{on:true,s:10,b:0,i:1,u:0},alamat:{on:true,s:10,b:0,i:0,u:0},lain:{on:false,s:9,b:0,i:0,u:0},post:{on:true,s:10,b:0,i:0,u:0}},
  rows:[{nama:"Bapak H. Andi Pratama, S.E.",jab:"Kepala Dinas Pendidikan",alamat:"Jl. Jenderal Sudirman No. 12\nParepare, Sulawesi Selatan",lain:""},{nama:"Ibu Dr. Siti Nurhaliza",jab:"Direktur Utama PT Maju Jaya",alamat:"Jl. Bau Massepe No. 45\nParepare",lain:""}]};
 let S;
@@ -218,7 +221,7 @@ function render(){save();
  const jc=S.valign==="space-evenly"?"space-evenly":"flex-start",vc=S.valign==="center"?" va-c":S.valign==="flex-end"?" va-e":"";
  const cols=au?nc:Math.max(1,Math.floor((pw-ml+gx)/(lw+gx))),rws=au?nr:Math.max(1,Math.floor((ph-mt+gy)/(lh+gy))),per=cols*rws;
  $("#calc").textContent=roll?`Mode langsung: tiap label = 1 halaman seukuran ${lw}×${lh} mm. Pilih kertas dengan ukuran yang sama di dialog cetak.`:`Muat ${cols} kolom × ${rws} baris = ${per} label per halaman.`;
- window.EW=pw;$("#pg").textContent=`@page{size:${pw}mm ${ph}mm;margin:0}`;
+ window.EW=pw;window.EH=ph;$("#pg").textContent=`@page{size:${pw}mm ${ph}mm;margin:0}`;
  const items=[],pre=(roll?0:Math.max(0,(+S.start||1)-1))+(Math.min(200,Math.max(1,Math.floor(+S.sheet0)||1))-1)*per;for(let i=0;i<pre;i++)items.push(null);
  const rng=str=>{const st=new Set();String(str||"").split(/[,;\s]+/).forEach(x=>{const m=x.match(/^(\d+)(?:-(\d+))?$/);if(m){const a=+m[1],b=+(m[2]||m[1]);for(let i=a;i<=Math.min(b,a+5000);i++)st.add(i)}});return st};
  const sel=rng(S.only),shs=rng(S.sheets),first={};
@@ -236,7 +239,7 @@ function render(){save();
    if(rot&&r)h+=`<div class="rt${vc}" style="position:absolute;display:flex;flex-direction:column;width:${lh-2*pad}mm;height:${lw-2*pad}mm;${rot===90?`left:${lw-pad}mm;top:${pad}mm;transform:rotate(90deg)`:`left:${pad}mm;top:${lh-pad}mm;transform:rotate(-90deg)`};transform-origin:0 0;justify-content:${jc};gap:${S.fgap}mm">`;
    if(r&&S.logo&&S.logoPos==="top")h+=logoTag();
    if(r){const part={};FN.forEach(([k])=>{const f=S.f[k],t=String(txt(k,r)||"").replace(/^\s+|\s+$/g,"");if(!f.on||!t)return;
-    part[k]=`<div style="font-size:calc(${f.s}pt*var(--k));font-weight:${f.b?700:400};font-style:${f.i?"italic":"normal"};text-transform:${f.u?"uppercase":"none"}">${esc(t)}</div>`});
+    part[k]=`<div style="font-size:calc(${f.s}pt*var(--k));font-weight:${f.b?700:400};font-style:${f.i?"italic":"normal"};text-transform:${f.u?"uppercase":"none"}${k==="jab"&&part.nama?`;margin-top:${(+S.gapNJ||0)-(+S.fgap||0)}mm`:""}">${esc(t)}</div>`});
     if(S.preSide&&part.pre)h+=`<div style="display:flex;gap:${S.sgap}mm;align-items:flex-start"><div style="flex:none;text-align:left">${part.pre}</div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:${S.fgap}mm;text-align:${S.align}">${FN.filter(([k])=>k!=="pre").map(([k])=>part[k]||"").join("")}</div></div>`;
     else h+=FN.map(([k])=>part[k]||"").join("")}
    if(r&&S.logo&&S.logoPos==='bottom')h+=logoTag();
@@ -254,8 +257,22 @@ function zoom(){const z=$("#zoom").value/100,PW=window.EW||S.pw,w=PW*3.7795*z;
  $("#pages").style.marginBottom=`${-(1-z)*$("#pages").offsetHeight}px`;$("#pages").style.marginRight=`${-(1-z)*PW*3.78}px`}
 $("#zoom").oninput=zoom;
 function printPage(n){$$(".page").forEach(el=>el.classList.toggle("pt",el.dataset.p==n));document.body.classList.add("po");setTimeout(()=>window.print(),30)}
-$("#print").onclick=()=>{const v=$("#pgsel").value;v?printPage(v):window.print()};
-$("#pages").addEventListener("click",e=>{const b=e.target.closest("[data-print]");if(b)printPage(b.dataset.print)});
+async function makePDF(nums){const pw=window.EW,ph=window.EH,btn=$("#print"),t0=btn.textContent;
+ if(!nums.length){$("#info").textContent="Tidak ada kertas yang dicetak (periksa pilihan Menu cetak).";return}
+ btn.disabled=true;const stage=document.createElement("div");stage.style.cssText="position:fixed;left:-99999px;top:0;background:#fff";document.body.appendChild(stage);
+ try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;let doc=null;const o=pw>ph?"l":"p";
+  for(let i=0;i<nums.length;i++){btn.textContent=`Membuat PDF ${i+1}/${nums.length}…`;
+   const c=document.querySelector(`.page[data-p="${nums[i]}"]`).cloneNode(true);c.style.margin="0";c.style.boxShadow="none";c.style.opacity="1";c.classList.remove("np");c.querySelectorAll(".lab").forEach(l=>l.classList.remove("gd","skip"));
+   stage.innerHTML="";stage.appendChild(c);
+   const cv=await html2canvas(c,{scale:3,backgroundColor:"#fff",useCORS:true,logging:false});
+   if(!doc)doc=new jspdf.jsPDF({orientation:o,unit:"mm",format:[pw,ph],compress:true});else doc.addPage([pw,ph],o);
+   doc.addImage(cv.toDataURL("image/png"),"PNG",0,0,pw,ph,undefined,"FAST")}
+  await saveFile("label-undangan.pdf",doc.output("blob"));$("#info").textContent=`PDF dibuat: ${nums.length} halaman.`}
+ catch(e){$("#info").textContent="Gagal membuat PDF. Ganti keluaran ke Dialog cetak.";console.error(e)}
+ stage.remove();btn.disabled=false;btn.textContent=t0}
+function doPrint(n){if(S.out==="pdf"&&window.html2canvas&&window.jspdf)return makePDF(n?[+n]:$$(".page:not(.np)").map(e=>+e.dataset.p));n?printPage(n):window.print()}
+$("#print").onclick=()=>doPrint($("#pgsel").value);
+$("#pages").addEventListener("click",e=>{const b=e.target.closest("[data-print]");if(b)doPrint(b.dataset.print)});
 window.addEventListener("afterprint",()=>{document.body.classList.remove("po");$$(".page.pt").forEach(el=>el.classList.remove("pt"))});
 function autoZoom(){const a=window.innerWidth>860?window.innerWidth-440:window.innerWidth-32,z=Math.min(1.2,a/(S.pw*3.7795));$("#zoom").value=Math.max(40,Math.round(z*100))}
 function parse(t){const d=t.includes("\t")?"\t":(t.split(";").length>t.split(",").length?";":",");const o=[];let r=[],c="",q=0;for(let i=0;i<t.length;i++){const x=t[i];if(q){if(x==='"'&&t[i+1]==='"'){c+='"';i++}else if(x==='"')q=0;else c+=x}else if(x==='"')q=1;else if(x===d){r.push(c);c=""}else if(x==="\n"||x==="\r"){if(x==="\r"&&t[i+1]==="\n")i++;r.push(c);c="";o.push(r);r=[]}else c+=x}r.push(c);o.push(r);return o.filter(r=>r.some(v=>v.trim()))}
