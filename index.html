@@ -40,8 +40,10 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
 .lab div{white-space:pre-line}
 .va-c>:first-child,.va-e>:first-child{margin-top:auto}.va-c>:last-child{margin-bottom:auto}
 .hint{font-size:12px;color:var(--mu)}
+.cap{font-size:12px;color:var(--mu);margin:0 0 4px}.cap.dim{color:#b45309}.page.np{opacity:.35}
+.or{display:grid;grid-template-columns:72px 1fr;gap:2px 8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--ln)}.or input{padding:3px 6px}.or .on{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.or .ob{grid-column:2;font-size:11px;color:var(--mu)}
 @media(max-width:860px){.app{grid-template-columns:1fr}aside{position:static;max-height:none;border-right:0}}
-@media print{body{background:#fff}aside,.bar{display:none}.app{display:block}main{padding:0;overflow:visible}
+@media print{body{background:#fff}aside,.bar,.cap,.page.np{display:none!important}.app{display:block}main{padding:0;overflow:visible}
 #pages{zoom:1!important;transform:none!important}.page{margin:0;box-shadow:none;break-after:page}.lab.gd,.lab.skip{outline:none}}
 </style>
 <style id="pg"></style>
@@ -101,7 +103,7 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
  <p class="hint">Kolom: tampil · ukuran font (pt) · B tebal · I miring · Aa huruf kapital.</p>
 
  <h2>Data tamu</h2>
- <label>Cetak hanya baris nomor (kosong = semua)</label><input data-k="only" placeholder="mis. 1-5, 8, 10-12" style="margin-bottom:10px">
+ <div class="g" style="margin-bottom:10px"><div><label>Cetak hanya nomor urut</label><input data-k="only" placeholder="mis. 1-5, 8"></div><div><label>Cetak hanya kertas label ke-</label><input data-k="sheets" placeholder="mis. 1-3, 5"></div></div>
  <label>Tempel dari Excel / CSV (kolom: Nama, Jabatan, Alamat, Lainnya)</label>
  <textarea id="paste" rows="4" placeholder="Budi Santoso&#9;Kepala Dinas&#9;Jl. Merdeka No. 1, Parepare"></textarea>
  <div class="bar" style="margin:8px 0">
@@ -111,6 +113,9 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
  </div>
  <p class="hint" id="dmsg">Unduh template, isi di Excel atau aplikasi lain, lalu impor kembali file-nya. Baris contoh tidak ikut diimpor.</p>
  <div id="rows"></div>
+ <h2>Nomor urut &amp; penempatan di kertas</h2>
+ <p class="hint">Isi nomor urut di sini (terpisah dari data). Label disusun ke kertas berurutan dari nomor terkecil, dan tidak dicetak di label. Kosong = mengikuti urutan daftar. Di bawah tiap nama terlihat kertas, baris, dan kolomnya.</p>
+ <div id="ord"></div>
 </aside>
 <main>
  <div class="bar">
@@ -129,7 +134,7 @@ const PRESETS={ "Tom & Jerry 121 — 38×76 mm (10/lembar)":{auto:false,lw:76,lh
 "Lembar label (potret 2×5 · lanskap 3×4)":{auto:true,nc:2,nr:5,ncl:3,nrl:4,mt:8,ml:6,gx:3,gy:3,align:"center",valign:"center",f:{nama:{s:14},jab:{s:10},alamat:{s:10},post:{s:10}}},
 "50×30 mm":[50,30],"64×32 mm":[64,32],"70×35 mm":[70,35],"75×38 mm":[75,38],"90×50 mm":[90,50],"100×50 mm":[100,50],"100×70 mm":[100,70],"105×74 mm (A7)":[105,74],"Kustom":null };
 const FN=[["nama","Nama"],["jab","Jabatan"],["alamat","Alamat"],["lain","Lainnya"],["post","Penutup"]];
-const DEF={lw:75,lh:38,pw:210,ph:297,mt:8,ml:6,gx:3,gy:3,pad:3,start:1,copies:1,auto:true,nc:2,nr:5,ncl:3,nrl:4,only:"",mode:"sheet",offx:0,offy:0,fgap:0.5,preSide:true,sgap:2,rot:"0",land:false,logo:"",logoPos:"top",logoH:10,numfmt:"No. {n}",font:"Figtree",align:"left",valign:"center",pre:"Yth.",post:"di Tempat",fit:true,guides:true,preset:"Lembar label (potret 2×5 · lanskap 3×4)",paper:"210,297",
+const DEF={lw:75,lh:38,pw:210,ph:297,mt:8,ml:6,gx:3,gy:3,pad:3,start:1,copies:1,auto:true,nc:2,nr:5,ncl:3,nrl:4,only:"",sheets:"",mode:"sheet",offx:0,offy:0,fgap:0.5,preSide:true,sgap:2,rot:"0",land:false,logo:"",logoPos:"top",logoH:10,numfmt:"No. {n}",font:"Figtree",align:"left",valign:"center",pre:"Yth.",post:"di Tempat",fit:true,guides:true,preset:"Lembar label (potret 2×5 · lanskap 3×4)",paper:"210,297",
  f:{no:{on:false,s:8,b:0,i:0,u:0},pre:{on:true,s:10,b:0,i:0,u:0},nama:{on:true,s:13,b:1,i:0,u:0},jab:{on:true,s:10,b:0,i:1,u:0},alamat:{on:true,s:10,b:0,i:0,u:0},lain:{on:false,s:9,b:0,i:0,u:0},post:{on:true,s:10,b:0,i:0,u:0}},
  rows:[{nama:"Bapak H. Andi Pratama, S.E.",jab:"Kepala Dinas Pendidikan",alamat:"Jl. Jenderal Sudirman No. 12\nParepare, Sulawesi Selatan",lain:""},{nama:"Ibu Dr. Siti Nurhaliza",jab:"Direktur Utama PT Maju Jaya",alamat:"Jl. Bau Massepe No. 45\nParepare",lain:""}]};
 let S;
@@ -188,6 +193,11 @@ $("#imp").onclick=()=>{const t=$("#paste").value.trim();if(!t)return;
   S.rows.push({nama:(c[0]||"").trim(),jab:(c[1]||"").trim(),alamat:(c[2]||"").trim(),lain:(c[3]||"").trim()})});
  $("#paste").value="";drawRows();render()};
 
+function syncOrd(first,per,cols){const el=$("#ord");if(!el)return;const rows=S.rows;
+ if(el.dataset.n!==String(rows.length)){el.innerHTML=rows.map((r,i)=>`<div class="or"><input type="number" step="any" data-o="${i}" placeholder="${i+1}" value="${esc(r.no)}" aria-label="No. urut baris ${i+1}"><span class="on"></span><span class="ob"></span></div>`).join("");el.dataset.n=rows.length;
+  $$("[data-o]").forEach(x=>x.oninput=()=>{S.rows[x.dataset.o].no=x.value;render()})}
+ [...el.children].forEach((d,i)=>{const r=rows[i],f=first[i];d.querySelector(".on").textContent=r.nama||"(kosong)";
+  d.querySelector(".ob").textContent=f===undefined?"tidak dicetak":`Kertas ${Math.floor(f/per)+1} · baris ${Math.floor((f%per)/cols)+1} · kolom ${f%cols+1}`})}
 // render
 const logoTag=()=>`<img src="${S.logo}" alt="" style="height:${S.logoH}mm;max-width:100%;object-fit:contain;flex:none;align-self:${S.align==="left"?"flex-start":S.align==="right"?"flex-end":"center"};padding:.6mm 0">`;
 function render(){save();
@@ -201,13 +211,16 @@ function render(){save();
  $("#calc").textContent=roll?`Mode langsung: tiap label = 1 halaman seukuran ${lw}×${lh} mm. Pilih kertas dengan ukuran yang sama di dialog cetak.`:`Muat ${cols} kolom × ${rws} baris = ${per} label per halaman.`;
  window.EW=pw;$("#pg").textContent=`@page{size:${pw}mm ${ph}mm;margin:0}`;
  const items=[];for(let i=1;i<(roll?1:S.start);i++)items.push(null);
- const sel=new Set();String(S.only||"").split(/[,;\s]+/).forEach(x=>{const m=x.match(/^(\d+)(?:-(\d+))?$/);if(m){const a=+m[1],b=+(m[2]||m[1]);for(let i=a;i<=Math.min(b,a+5000);i++)sel.add(i)}});
- S.rows.forEach((r,ri)=>{if(!(r.nama||r.jab||r.alamat||r.lain))return;if(sel.size&&!sel.has(ri+1))return;const no=String(r.no||"").trim()||String(ri+1).padStart(3,"0");for(let c=0;c<Math.max(1,S.copies);c++)items.push({...r,_n:no})});
+ const rng=str=>{const st=new Set();String(str||"").split(/[,;\s]+/).forEach(x=>{const m=x.match(/^(\d+)(?:-(\d+))?$/);if(m){const a=+m[1],b=+(m[2]||m[1]);for(let i=a;i<=Math.min(b,a+5000);i++)st.add(i)}});return st};
+ const sel=rng(S.only),shs=rng(S.sheets),first={};
+ const en=(r,ri)=>{const v=parseFloat(r.no);return isFinite(v)?v:ri+1};
+ S.rows.map((r,ri)=>({r,ri,n:en(r,ri)})).filter(o=>o.r.nama||o.r.jab||o.r.alamat||o.r.lain).sort((a,b)=>a.n-b.n||a.ri-b.ri).forEach(o=>{if(sel.size&&!sel.has(o.n))return;first[o.ri]=items.length;for(let c=0;c<Math.max(1,S.copies);c++)items.push({...o.r,_n:o.n})});
  const pages=Math.max(1,Math.ceil(items.length/per));
  const txt=(k,r)=>k==="no"?S.numfmt.replace("{n}",r._n):k==="pre"?S.pre:k==="post"?S.post:r[k];
  let h="";
  for(let p=0;p<pages;p++){
-  h+=`<section class="page" style="width:${pw}mm;height:${ph}mm;padding:${mt}mm 0 0 ${ml}mm;grid-template-columns:repeat(${cols},${lw}mm);grid-auto-rows:${lh}mm;gap:${gy}mm ${gx}mm">`;
+  const np=shs.size&&!shs.has(p+1);
+  h+=`<div class="cap${np?" dim":""}">Kertas label ke-${p+1}${np?" · tidak ikut dicetak":""}</div><section class="page${np?" np":""}" style="width:${pw}mm;height:${ph}mm;padding:${mt}mm 0 0 ${ml}mm;grid-template-columns:repeat(${cols},${lw}mm);grid-auto-rows:${lh}mm;gap:${gy}mm ${gx}mm">`;
   for(let i=0;i<per;i++){const r=items[p*per+i];
    const cls=r?(S.guides?"lab gd":"lab"):(S.guides&&items[p*per+i]===null?"lab skip":"lab");
    h+=`<div class="${cls}${rot?"":vc}" style="width:${lw}mm;height:${lh}mm;position:relative;padding:${rot?0:pad}mm;justify-content:${jc};gap:${S.fgap}mm;text-align:${S.align};font-family:'${S.font}',serif;--k:1">`;
@@ -221,7 +234,7 @@ function render(){save();
    if(rot&&r)h+=`</div>`;
    h+=`</div>`}
   h+=`</section>`}
- $("#pages").innerHTML=h;
+ $("#pages").innerHTML=h;syncOrd(first,per,cols);
  $("#info").textContent=`${items.filter(Boolean).length} label · ${pages} halaman`;
  if(S.fit)fit();
  zoom()}
