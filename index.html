@@ -43,10 +43,10 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
 #print{background:var(--pr);border-color:var(--pr);color:var(--prt);font-weight:700}
 .pr{border-left:3px solid var(--pr);padding-left:10px;background:color-mix(in srgb,var(--pr) 9%,transparent);border-radius:0 8px 8px 0;padding-top:6px;padding-bottom:6px}
 .ck{display:flex;gap:8px;align-items:center;color:var(--tx);font-size:13px;padding:4px 2px}.row.off{opacity:.55}
-.cap{font-size:12px;color:var(--mu);margin:0 0 4px}.cap.dim{color:#b45309}.page.np{opacity:.35}
+.cap{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--mu);margin:0 0 4px}.cap button{padding:2px 10px;font-size:12px;color:var(--pr);border-color:var(--pr)}.cap.dim{color:#b45309}.page.np{opacity:.35}
 .or{display:grid;grid-template-columns:72px 1fr;gap:2px 8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--ln)}.or input{padding:3px 6px}.or .on{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.or .ob{grid-column:2;font-size:11px;color:var(--mu)}
 @media(max-width:860px){.app{grid-template-columns:1fr}aside{position:static;max-height:none;border-right:0}}
-@media print{body{background:#fff}aside,.bar,.cap,.page.np{display:none!important}.app{display:block}main{padding:0;overflow:visible}
+@media print{body{background:#fff}aside,.bar,.cap,.page.np{display:none!important}body.po .page:not(.pt){display:none!important}body.po .page.pt{display:grid!important;opacity:1!important}.app{display:block}main{padding:0;overflow:visible}
 #pages{zoom:1!important;transform:none!important}.page{margin:0;box-shadow:none;break-after:page}.lab.gd,.lab.skip{outline:none}}
 </style>
 <style id="pg"></style>
@@ -127,6 +127,7 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
 <main>
  <div class="bar">
   <button class="p" id="print">Cetak label</button>
+  <select id="pgsel" aria-label="Cakupan cetak" title="Pilih kertas yang dicetak" style="width:auto"><option value="">Semua kertas</option></select>
   <label style="display:flex;gap:6px;align-items:center">Zoom <input type="range" id="zoom" min="40" max="160" value="100" style="width:120px"></label>
   <span class="info" id="info"></span>
  </div>
@@ -228,7 +229,7 @@ function render(){save();
  let h="";
  for(let p=Math.min(pages-1,Math.max(0,Math.floor(+S.sheet0||1)-1));p<pages;p++){
   const np=shs.size&&!shs.has(p+1);
-  h+=`<div class="cap${np?" dim":""}">Kertas label ke-${p+1}${np?" · tidak ikut dicetak":""}</div><section class="page${np?" np":""}" style="width:${pw}mm;height:${ph}mm;padding:${mt}mm 0 0 ${ml}mm;grid-template-columns:repeat(${cols},${lw}mm);grid-auto-rows:${lh}mm;gap:${gy}mm ${gx}mm">`;
+  h+=`<div class="cap${np?" dim":""}"><span>Kertas label ke-${p+1}${np?" · tidak ikut dicetak":""}</span><button type="button" data-print="${p+1}" title="Langsung cetak kertas ini">🖨 Cetak kertas ini</button></div><section class="page${np?" np":""}" data-p="${p+1}" style="width:${pw}mm;height:${ph}mm;padding:${mt}mm 0 0 ${ml}mm;grid-template-columns:repeat(${cols},${lw}mm);grid-auto-rows:${lh}mm;gap:${gy}mm ${gx}mm">`;
   for(let i=0;i<per;i++){const r=items[p*per+i];
    const cls=r?(S.guides?"lab gd":"lab"):(S.guides&&items[p*per+i]===null?"lab skip":"lab");
    h+=`<div class="${cls}${rot?"":vc}" style="width:${lw}mm;height:${lh}mm;position:relative;padding:${rot?0:pad}mm;justify-content:${jc};gap:${S.fgap}mm;text-align:${S.align};font-family:'${S.font}',serif;--k:1">`;
@@ -243,6 +244,7 @@ function render(){save();
    h+=`</div>`}
   h+=`</section>`}
  $("#pages").innerHTML=h;syncOrd(first,per,cols);
+ {const sl=$("#pgsel"),cur=sl.value,p0=Math.min(pages-1,Math.max(0,Math.floor(+S.sheet0||1)-1));let o='<option value="">Semua kertas</option>';for(let i=p0+1;i<=pages;i++)o+=`<option value="${i}">Kertas ke-${i}</option>`;sl.innerHTML=o;if([...sl.options].some(x=>x.value===cur))sl.value=cur}
  $("#info").textContent=`${items.filter(Boolean).length} label · ${pages-Math.min(pages-1,Math.max(0,Math.floor(+S.sheet0||1)-1))} halaman`;
  if(S.fit)fit();
  zoom()}
@@ -251,7 +253,10 @@ function zoom(){const z=$("#zoom").value/100,PW=window.EW||S.pw,w=PW*3.7795*z;
  $("#pages").style.zoom="";$("#pages").style.transform=`scale(${z})`;$("#pages").style.width=PW+"mm";
  $("#pages").style.marginBottom=`${-(1-z)*$("#pages").offsetHeight}px`;$("#pages").style.marginRight=`${-(1-z)*PW*3.78}px`}
 $("#zoom").oninput=zoom;
-$("#print").onclick=()=>window.print();
+function printPage(n){$$(".page").forEach(el=>el.classList.toggle("pt",el.dataset.p==n));document.body.classList.add("po");setTimeout(()=>window.print(),30)}
+$("#print").onclick=()=>{const v=$("#pgsel").value;v?printPage(v):window.print()};
+$("#pages").addEventListener("click",e=>{const b=e.target.closest("[data-print]");if(b)printPage(b.dataset.print)});
+window.addEventListener("afterprint",()=>{document.body.classList.remove("po");$$(".page.pt").forEach(el=>el.classList.remove("pt"))});
 function autoZoom(){const a=window.innerWidth>860?window.innerWidth-440:window.innerWidth-32,z=Math.min(1.2,a/(S.pw*3.7795));$("#zoom").value=Math.max(40,Math.round(z*100))}
 function parse(t){const d=t.includes("\t")?"\t":(t.split(";").length>t.split(",").length?";":",");const o=[];let r=[],c="",q=0;for(let i=0;i<t.length;i++){const x=t[i];if(q){if(x==='"'&&t[i+1]==='"'){c+='"';i++}else if(x==='"')q=0;else c+=x}else if(x==='"')q=1;else if(x===d){r.push(c);c=""}else if(x==="\n"||x==="\r"){if(x==="\r"&&t[i+1]==="\n")i++;r.push(c);c="";o.push(r);r=[]}else c+=x}r.push(c);o.push(r);return o.filter(r=>r.some(v=>v.trim()))}
 $("#csvb").onclick=()=>$("#csvf").click();
