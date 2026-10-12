@@ -128,7 +128,7 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
  <div class="bar">
   <button class="p" id="print">Cetak label</button>
   <select id="pgsel" aria-label="Cakupan cetak" title="Pilih kertas yang dicetak" style="width:auto"><option value="">Semua kertas</option></select>
-  <select id="outmode" data-k="out" aria-label="Keluaran cetak" title="Hasil saat tombol cetak diklik" style="width:auto"><option value="pdf">PDF langsung</option><option value="dialog">Dialog cetak</option></select>
+  <select id="outmode" data-k="out" aria-label="Keluaran cetak" title="Hasil saat tombol cetak diklik" style="width:auto"><option value="pdf">PDF langsung cetak</option><option value="pdfdl">Unduh PDF</option><option value="dialog">Dialog cetak</option></select>
   <label style="display:flex;gap:5px;align-items:center;font-size:12px;color:var(--tx)" title="Halaman PDF yang barisnya belum penuh dipotong sampai baris label terakhir yang terisi"><input type="checkbox" data-k="trim"> Potong PDF sesuai baris terisi</label>
   <label style="display:flex;gap:6px;align-items:center">Zoom <input type="range" id="zoom" min="40" max="160" value="100" style="width:120px"></label>
   <span class="info" id="info"></span>
@@ -258,7 +258,11 @@ function zoom(){const z=$("#zoom").value/100,PW=window.EW||S.pw,w=PW*3.7795*z;
  $("#pages").style.marginBottom=`${-(1-z)*$("#pages").offsetHeight}px`;$("#pages").style.marginRight=`${-(1-z)*PW*3.78}px`}
 $("#zoom").oninput=zoom;
 function printPage(n){$$(".page").forEach(el=>el.classList.toggle("pt",el.dataset.p==n));document.body.classList.add("po");setTimeout(()=>window.print(),30)}
-async function makePDF(nums){const pw=window.EW,ph=window.EH,btn=$("#print"),t0=btn.textContent;
+function printBlob(blob){return new Promise((res,rej)=>{const u=URL.createObjectURL(blob),f=document.createElement("iframe");let ok=false;
+ f.style.cssText="position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0";f.src=u;
+ f.onload=()=>setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print();ok=true;res()}catch(e){rej(e)}},400);
+ document.body.appendChild(f);setTimeout(()=>{if(!ok)rej(new Error("timeout"))},8000);setTimeout(()=>{f.remove();URL.revokeObjectURL(u)},180000)})}
+async function makePDF(nums,dl){const pw=window.EW,ph=window.EH,btn=$("#print"),t0=btn.textContent;
  if(!nums.length){$("#info").textContent="Tidak ada kertas yang dicetak (periksa pilihan Menu cetak).";return}
  btn.disabled=true;const stage=document.createElement("div");stage.style.cssText="position:fixed;left:-99999px;top:0;background:#fff";document.body.appendChild(stage);
  try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;let doc=null;const o=pw>ph?"l":"p";
@@ -271,10 +275,13 @@ async function makePDF(nums){const pw=window.EW,ph=window.EH,btn=$("#print"),t0=
    const oo=pw>hh?"l":"p";
    if(!doc)doc=new jspdf.jsPDF({orientation:oo,unit:"mm",format:[pw,hh],compress:true});else doc.addPage([pw,hh],oo);
    doc.addImage(cv.toDataURL("image/png"),"PNG",0,0,pw,hh,undefined,"FAST")}
-  await saveFile("label-undangan.pdf",doc.output("blob"));$("#info").textContent=`PDF dibuat: ${nums.length} halaman.`}
+  const blob=doc.output("blob");let how="diunduh";
+  if(dl)await saveFile("label-undangan.pdf",blob);
+  else{try{await printBlob(blob);how="dikirim ke dialog cetak"}catch(e){await saveFile("label-undangan.pdf",blob);how="diunduh (dialog cetak PDF tidak bisa dibuka di browser ini, buka file lalu cetak)"}}
+  $("#info").textContent=`PDF ${how}: ${nums.length} halaman.`}
  catch(e){$("#info").textContent="Gagal membuat PDF. Ganti keluaran ke Dialog cetak.";console.error(e)}
  stage.remove();btn.disabled=false;btn.textContent=t0}
-function doPrint(n){if(S.out==="pdf"&&window.html2canvas&&window.jspdf)return makePDF(n?[+n]:$$(".page:not(.np)").map(e=>+e.dataset.p));n?printPage(n):window.print()}
+function doPrint(n){if((S.out==="pdf"||S.out==="pdfdl")&&window.html2canvas&&window.jspdf)return makePDF(n?[+n]:$$(".page:not(.np)").map(e=>+e.dataset.p),S.out==="pdfdl");n?printPage(n):window.print()}
 $("#print").onclick=()=>doPrint($("#pgsel").value);
 $("#pages").addEventListener("click",e=>{const b=e.target.closest("[data-print]");if(b)doPrint(b.dataset.print)});
 window.addEventListener("afterprint",()=>{document.body.classList.remove("po");$$(".page.pt").forEach(el=>el.classList.remove("pt"))});
