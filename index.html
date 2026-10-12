@@ -40,20 +40,18 @@ button.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;
 .lab div{white-space:pre-line}
 .va-c>:first-child,.va-e>:first-child{margin-top:auto}.va-c>:last-child{margin-bottom:auto}
 .hint{font-size:12px;color:var(--mu)}
-#gate{position:fixed;inset:0;z-index:99;background:var(--bg);align-items:center;justify-content:center;padding:24px;text-align:center}#gate .gc{max-width:380px;background:var(--pn);border:1px solid var(--ln);border-radius:12px;padding:24px}
 #print{background:var(--pr);border-color:var(--pr);color:var(--prt);font-weight:700}
 .pr{border-left:3px solid var(--pr);padding-left:10px;background:color-mix(in srgb,var(--pr) 9%,transparent);border-radius:0 8px 8px 0;padding-top:6px;padding-bottom:6px}
 .ck{display:flex;gap:8px;align-items:center;color:var(--tx);font-size:13px;padding:4px 2px}.row.off{opacity:.55}
 .cap{font-size:12px;color:var(--mu);margin:0 0 4px}.cap.dim{color:#b45309}.page.np{opacity:.35}
 .or{display:grid;grid-template-columns:72px 1fr;gap:2px 8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--ln)}.or input{padding:3px 6px}.or .on{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.or .ob{grid-column:2;font-size:11px;color:var(--mu)}
 @media(max-width:860px){.app{grid-template-columns:1fr}aside{position:static;max-height:none;border-right:0}}
-@media print{body{background:#fff}aside,.bar,.cap,.page.np,#gate{display:none!important}.app{display:block}main{padding:0;overflow:visible}
+@media print{body{background:#fff}aside,.bar,.cap,.page.np{display:none!important}.app{display:block}main{padding:0;overflow:visible}
 #pages{zoom:1!important;transform:none!important}.page{margin:0;box-shadow:none;break-after:page}.lab.gd,.lab.skip{outline:none}}
 </style>
 <style id="pg"></style>
 </head>
 <body>
-<div id="gate" style="display:none"><div class="gc"><div style="font-size:34px" aria-hidden="true">🔒</div><h1 style="font-size:18px;margin:8px 0">Cetak Label Undangan</h1><p id="gmsg" class="sub"></p><button id="gretry" class="p" hidden>Coba lagi</button></div></div>
 <div class="app">
 <aside>
  <h1>Cetak Label Undangan</h1>
@@ -321,12 +319,6 @@ $("#jimp").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(x=>
  $("#dmsg").textContent=`JSON diimpor: ${n} baris data${set?" + pengaturan":""}.`}catch(err){$("#dmsg").textContent="File JSON tidak valid atau formatnya tidak dikenali."}e.target.value=""})};
 drawT();
 drawRows();autoZoom();render();
-// Pembatas akses: hanya akun yang dikenali (anggota/undangan pemilik) saat dibuka sebagai halaman terbit
-async function chk(){const g=$("#gate"),m=$("#gmsg"),b=$("#gretry");g.style.display="flex";b.hidden=true;m.textContent="Memeriksa akun…";let u=null;try{u=await claude.use("user")}catch(e){}
- if(u){g.style.display="none";return}
- m.textContent="Halaman ini hanya untuk akun yang didaftarkan (diundang) oleh pemilik. Masuk dengan akun yang sudah diundang, lalu coba lagi.";b.hidden=false}
-$("#gretry").onclick=chk;
-if(window.claude)chk();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
 window.addEventListener("beforeprint",()=>{$("#pages").style.transform="none";$("#pages").style.margin="0"});
 window.addEventListener("afterprint",zoom);
